@@ -251,7 +251,7 @@ function makeIssueKey(year: number, issue: string): string {
 
 // ─── Time guard ──────────────────────────────────────────
 
-const MAX_RUNTIME_MS = 50_000 // 50s safety margin (edge fn limit ~60s)
+const MAX_RUNTIME_MS = 55_000 // 55s safety margin (edge fn limit ~60s)
 
 function isTimeUp(startTime: number): boolean {
   return Date.now() - startTime > MAX_RUNTIME_MS
