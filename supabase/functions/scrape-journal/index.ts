@@ -423,22 +423,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Insert articles
+    // Insert articles — use insert to accurately count new vs existing
     let inserted = 0
     let skipped = 0
+    let errors = 0
     for (const article of allArticles) {
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('articles')
         .upsert(article, { onConflict: 'title,journal,year', ignoreDuplicates: true })
+        .select('id')
       if (error) {
         logs.push(`Ошибка вставки "${article.title}": ${error.message}`)
-        skipped++
-      } else {
+        errors++
+      } else if (insertedData && insertedData.length > 0) {
         inserted++
+      } else {
+        skipped++
       }
     }
 
-    logs.push(`Готово! Добавлено: ${inserted}, Пропущено: ${skipped}`)
+    logs.push(`Готово! Новых: ${inserted}, Уже в базе: ${skipped}, Ошибок: ${errors}`)
 
     return new Response(
       JSON.stringify({
@@ -446,6 +450,7 @@ Deno.serve(async (req) => {
         total_found: allArticles.length,
         inserted,
         skipped,
+        errors,
         timed_out: timedOut,
         logs,
       }),
