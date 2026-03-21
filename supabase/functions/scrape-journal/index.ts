@@ -234,7 +234,7 @@ function parseZakonIssue(markdown: string, year: number, month: string): any[] {
         authors: authors.length > 0 ? authors : ['Автор не указан'],
         journal: 'Вестник экономического правосудия',
         year,
-        issue: month,
+        issue: monthToNumber(month),
         section: currentSection || null,
         topics: classifyTopics(title, currentSection),
         url: `https://zakon.ru/publication/igzakon/${articleMatch[2]}`,
