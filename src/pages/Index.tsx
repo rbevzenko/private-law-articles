@@ -8,11 +8,14 @@ import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
 import type { Article } from "@/data/articles";
 
+const PAGE_SIZE = 50;
+
 const Index = () => {
   const [search, setSearch] = useState("");
   const [topic, setTopic] = useState("all");
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
+  const [page, setPage] = useState(1);
 
   const { data: dbArticles, isLoading } = useArticles();
   const { data: dbTopics } = useArticleTopics();
