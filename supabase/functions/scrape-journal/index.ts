@@ -382,16 +382,22 @@ Deno.serve(async (req) => {
         issues = filteredIssues
       }
 
-      for (const issue of issues) {
+      for (let i = 0; i < issues.length; i += PARALLEL_LIMIT) {
         if (isTimeUp(startTime)) { timedOut = true; logs.push('⏱ Лимит времени — продолжите сканирование повторным запуском'); break }
-        try {
+        const batch = issues.slice(i, i + PARALLEL_LIMIT)
+        const batchResults = await Promise.allSettled(batch.map(async (issue) => {
           logs.push(`Сканирую: ${issue.month} ${issue.year}`)
           const issuePage = await scrapeWithFirecrawl(issue.url, firecrawlKey)
-          const articles = parseZakonIssue(issuePage, issue.year, issue.month)
-          allArticles.push(...articles)
-          logs.push(`Найдено ${articles.length} статей в ${issue.month} ${issue.year}`)
-        } catch (e) {
-          logs.push(`❌ Ошибка ${issue.url}: ${e.message}`)
+          return parseZakonIssue(issuePage, issue.year, issue.month)
+        }))
+        for (let j = 0; j < batchResults.length; j++) {
+          const r = batchResults[j]
+          if (r.status === 'fulfilled') {
+            allArticles.push(...r.value)
+            logs.push(`Найдено ${r.value.length} статей в ${batch[j].month} ${batch[j].year}`)
+          } else {
+            logs.push(`❌ Ошибка ${batch[j].url}: ${r.reason?.message || r.reason}`)
+          }
         }
       }
     }
