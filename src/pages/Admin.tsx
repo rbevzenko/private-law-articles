@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 const JOURNALS = [
   { id: "mvgp", name: "Вестник гражданского права", color: "bg-emerald-100 text-emerald-800" },
   { id: "privlaw", name: "Цивилистика", color: "bg-blue-100 text-blue-800" },
-  { id: "zakon", name: "Вестник экономического правосудия", color: "bg-amber-100 text-amber-800" },
+  { id: "zakon", name: "Вестник экономического правосудия (ранее Вестник ВАС РФ)", color: "bg-amber-100 text-amber-800" },
 ] as const;
 
 type ScrapeMode = "new" | "all";
