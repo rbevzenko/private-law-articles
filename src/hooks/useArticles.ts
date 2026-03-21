@@ -19,14 +19,24 @@ export function useArticles() {
   return useQuery({
     queryKey: ["articles"],
     queryFn: async (): Promise<DbArticle[]> => {
-      const { data, error } = await supabase
-        .from("articles")
-        .select("*")
-        .order("year", { ascending: false })
-        .order("title");
-
-      if (error) throw error;
-      return (data as DbArticle[]) || [];
+      // Fetch all articles (bypass 1000 row default limit)
+      let allData: DbArticle[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("articles")
+          .select("*")
+          .order("year", { ascending: false })
+          .order("title")
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allData = allData.concat(data as DbArticle[]);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      return allData;
     },
   });
 }
