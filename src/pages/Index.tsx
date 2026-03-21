@@ -68,6 +68,16 @@ const Index = () => {
     });
   }, [search, topic, year, journal, allArticles]);
 
+  // Reset page when filters change
+  const handleTopicChange = useCallback((v: string) => { setTopic(v); setPage(1); }, []);
+  const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
+  const handleJournalChange = useCallback((v: string) => { setJournal(v); setPage(1); }, []);
+  const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedArticles = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   return (
     <div className="min-h-screen">
       {/* Header */}
