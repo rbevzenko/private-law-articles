@@ -1,25 +1,59 @@
 import { useMemo, useState } from "react";
-import { BookOpen } from "lucide-react";
-import { articles } from "@/data/articles";
+import { BookOpen, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useArticles, useArticleTopics } from "@/hooks/useArticles";
+import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
+import type { Article } from "@/data/articles";
 
 const Index = () => {
   const [search, setSearch] = useState("");
   const [topic, setTopic] = useState("all");
   const [year, setYear] = useState("all");
+  const [journal, setJournal] = useState("all");
+
+  const { data: dbArticles, isLoading } = useArticles();
+  const { data: dbTopics } = useArticleTopics();
+
+  // Merge DB articles with static ones, preferring DB
+  const allArticles: Article[] = useMemo(() => {
+    if (dbArticles && dbArticles.length > 0) {
+      return dbArticles.map((a) => ({
+        id: a.id,
+        title: a.title,
+        authors: a.authors,
+        journal: a.journal,
+        year: a.year,
+        issue: a.issue || undefined,
+        topics: a.topics,
+      }));
+    }
+    return staticArticles;
+  }, [dbArticles]);
+
+  const topics = useMemo(
+    () => dbTopics && dbTopics.length > 0 ? dbTopics : [...TOPICS],
+    [dbTopics]
+  );
+
+  const journals = useMemo(
+    () => [...new Set(allArticles.map((a) => a.journal))].sort(),
+    [allArticles]
+  );
 
   const years = useMemo(
-    () => [...new Set(articles.map((a) => a.year))].sort((a, b) => b - a),
-    []
+    () => [...new Set(allArticles.map((a) => a.year))].sort((a, b) => b - a),
+    [allArticles]
   );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return articles.filter((a) => {
+    return allArticles.filter((a) => {
       if (topic !== "all" && !a.topics.includes(topic)) return false;
       if (year !== "all" && a.year !== Number(year)) return false;
+      if (journal !== "all" && a.journal !== journal) return false;
       if (
         q &&
         !a.title.toLowerCase().includes(q) &&
@@ -29,7 +63,7 @@ const Index = () => {
         return false;
       return true;
     });
-  }, [search, topic, year]);
+  }, [search, topic, year, journal, allArticles]);
 
   return (
     <div className="min-h-screen">
@@ -43,14 +77,21 @@ const Index = () => {
           <span className="hidden sm:inline font-body text-sm text-muted-foreground ml-1">
             — библиография
           </span>
+          <div className="ml-auto">
+            <Link
+              to="/admin"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Управление каталогом"
+            >
+              <Settings className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero */}
       <section className="container mx-auto px-4 pt-12 pb-8 sm:px-8 sm:pt-16 sm:pb-10">
-        <div
-          className="animate-fade-up max-w-2xl"
-        >
+        <div className="animate-fade-up max-w-2xl">
           <h2 className="text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             Библиографический каталог статей по частному праву
           </h2>
@@ -73,37 +114,51 @@ const Index = () => {
             selectedYear={year}
             onYearChange={setYear}
             years={years}
+            topics={topics}
+            journals={journals}
+            selectedJournal={journal}
+            onJournalChange={setJournal}
           />
         </div>
       </section>
 
       {/* Results */}
       <section className="container mx-auto px-4 sm:px-8 pb-16">
-        <p className="mb-4 font-body text-sm text-muted-foreground">
-          {filtered.length}{" "}
-          {filtered.length === 1
-            ? "публикация"
-            : filtered.length < 5
-            ? "публикации"
-            : "публикаций"}
-        </p>
-
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center animate-fade-in">
-            <p className="font-body text-muted-foreground">
-              Ничего не найдено. Попробуйте изменить критерии поиска.
+        {isLoading ? (
+          <div className="py-16 text-center">
+            <p className="font-body text-muted-foreground animate-pulse">
+              Загрузка каталога...
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {filtered.map((article, i) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                style={{ animationDelay: `${150 + i * 70}ms` }}
-              />
-            ))}
-          </div>
+          <>
+            <p className="mb-4 font-body text-sm text-muted-foreground">
+              {filtered.length}{" "}
+              {filtered.length === 1
+                ? "публикация"
+                : filtered.length < 5
+                ? "публикации"
+                : "публикаций"}
+            </p>
+
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center animate-fade-in">
+                <p className="font-body text-muted-foreground">
+                  Ничего не найдено. Попробуйте изменить критерии поиска.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {filtered.map((article, i) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    style={{ animationDelay: `${Math.min(150 + i * 40, 800)}ms` }}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
 
