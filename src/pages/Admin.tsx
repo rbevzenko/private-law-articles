@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Database, ArrowLeft } from "lucide-react";
+import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,26 +12,26 @@ const JOURNALS = [
   { id: "zakon", name: "Вестник экономического правосудия", color: "bg-amber-100 text-amber-800" },
 ] as const;
 
+type ScrapeMode = "new" | "all";
+
 const Admin = () => {
   const { toast } = useToast();
   const [scraping, setScraping] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
-  const [results, setResults] = useState<{ total: number; inserted: number; skipped: number } | null>(null);
-  const [limit, setLimit] = useState(5);
+  const [results, setResults] = useState<{ total: number; inserted: number; skipped: number; timedOut?: boolean } | null>(null);
+  const [mode, setMode] = useState<ScrapeMode>("new");
 
   const handleScrape = async (journalId: string) => {
     setScraping(journalId);
-    setLogs([`Начинаю сканирование (до ${limit} номеров)...`]);
+    setLogs([`Режим: ${mode === "new" ? "только новые номера" : "все номера"}. Начинаю...`]);
     setResults(null);
 
     try {
       const { data, error } = await supabase.functions.invoke("scrape-journal", {
-        body: { journal: journalId, limit },
+        body: { journal: journalId, mode },
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
       if (data.success) {
         setLogs(data.logs || []);
@@ -39,21 +39,20 @@ const Admin = () => {
           total: data.total_found,
           inserted: data.inserted,
           skipped: data.skipped,
+          timedOut: data.timed_out,
         });
         toast({
-          title: "Сканирование завершено",
-          description: `Найдено ${data.total_found} статей, добавлено ${data.inserted}`,
+          title: data.timed_out ? "Частично завершено" : "Сканирование завершено",
+          description: data.timed_out
+            ? `Добавлено ${data.inserted} статей. Запустите ещё раз для оставшихся номеров.`
+            : `Найдено ${data.total_found} статей, добавлено ${data.inserted}`,
         });
       } else {
         throw new Error(data.error || "Unknown error");
       }
     } catch (err: any) {
       setLogs((prev) => [...prev, `❌ Ошибка: ${err.message}`]);
-      toast({
-        title: "Ошибка сканирования",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast({ title: "Ошибка сканирования", description: err.message, variant: "destructive" });
     } finally {
       setScraping(null);
     }
@@ -78,23 +77,39 @@ const Admin = () => {
           <div>
             <h2 className="text-2xl font-bold tracking-tight mb-2">Сканирование журналов</h2>
             <p className="text-muted-foreground font-body">
-              Выберите журнал для автоматического сбора статей. Программа зайдёт на сайт журнала,
-              найдёт все статьи и добавит их в каталог.
+              Выберите журнал и режим сканирования. При большом количестве номеров
+              сканирование может быть разбито на несколько запусков.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm font-body text-muted-foreground">Номеров за раз:</label>
-            <select
-              value={limit}
-              onChange={(e) => setLimit(Number(e.target.value))}
-              className="h-9 px-3 rounded-md border border-border bg-card text-sm font-body"
-              disabled={!!scraping}
-            >
-              {[3, 5, 10, 20, 50, 100].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
+            <label className="text-sm font-body text-muted-foreground">Режим:</label>
+            <div className="flex rounded-md border border-border overflow-hidden">
+              <button
+                onClick={() => setMode("new")}
+                disabled={!!scraping}
+                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-body transition-colors ${
+                  mode === "new"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Только новые
+              </button>
+              <button
+                onClick={() => setMode("all")}
+                disabled={!!scraping}
+                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-body transition-colors border-l border-border ${
+                  mode === "all"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FolderDown className="h-3.5 w-3.5" />
+                Все номера
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -127,8 +142,10 @@ const Admin = () => {
           </div>
 
           {results && (
-            <Card className="p-5 border-green-200 bg-green-50/50">
-              <h3 className="font-semibold text-green-800 mb-2">Результат</h3>
+            <Card className={`p-5 ${results.timedOut ? "border-amber-200 bg-amber-50/50" : "border-green-200 bg-green-50/50"}`}>
+              <h3 className={`font-semibold mb-2 ${results.timedOut ? "text-amber-800" : "text-green-800"}`}>
+                {results.timedOut ? "Частично завершено — запустите ещё раз" : "Результат"}
+              </h3>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-green-700">{results.total}</div>
