@@ -142,6 +142,12 @@ function parseZakonIssue(markdown: string, year: number, month: string): any[] {
   const articles: any[] = []
   const lines = markdown.split('\n')
   let currentSection = ''
+  const issueNum = monthToNumber(month)
+  // Determine correct journal name based on historical rename (pre-Sep 2014 = Вестник ВАС РФ)
+  const preRenameMonths = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август']
+  const isPreRename = year < 2014 || (year === 2014 && preRenameMonths.includes(month))
+  const journalName = isPreRename ? 'Вестник ВАС РФ' : 'Вестник экономического правосудия'
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     if (!line.startsWith('#') && !line.startsWith('-') && !line.startsWith('!') && !line.startsWith('[') && !line.includes('zakon.ru') && line.length > 3 && line.length < 60 && /^[А-ЯЁ]/.test(line) && !line.includes('аннотация') && !line.includes('Купить') && !line.includes('Подпис') && !line.includes('Cookie') && !line.includes('Чтобы') && !line.includes('Если вы') && !line.includes('Пожалуйста')) {
@@ -167,8 +173,8 @@ function parseZakonIssue(markdown: string, year: number, month: string): any[] {
       if (!title || title.length < 5) continue
       articles.push({
         title, authors: authors.length > 0 ? authors : ['Автор не указан'],
-        journal: 'Вестник экономического правосудия', year,
-        issue: monthToNumber(month), section: currentSection || null,
+        journal: journalName, year,
+        issue: issueNum, section: currentSection || null,
         topics: classifyTopics(title, currentSection),
         url: `https://zakon.ru/publication/igzakon/${articleMatch[2]}`,
         source_url: `https://zakon.ru/publication/igzakon/${articleMatch[2]}`,
