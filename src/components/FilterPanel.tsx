@@ -1,4 +1,3 @@
-import { TOPICS } from "@/data/articles";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -14,6 +13,10 @@ interface FilterPanelProps {
   selectedYear: string;
   onYearChange: (year: string) => void;
   years: number[];
+  topics: string[];
+  journals?: string[];
+  selectedJournal?: string;
+  onJournalChange?: (journal: string) => void;
 }
 
 const FilterPanel = ({
@@ -22,7 +25,13 @@ const FilterPanel = ({
   selectedYear,
   onYearChange,
   years,
+  topics,
+  journals,
+  selectedJournal = "all",
+  onJournalChange,
 }: FilterPanelProps) => {
+  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all";
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Select value={selectedTopic} onValueChange={onTopicChange}>
@@ -31,13 +40,29 @@ const FilterPanel = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Все темы</SelectItem>
-          {TOPICS.map((topic) => (
+          {topics.map((topic) => (
             <SelectItem key={topic} value={topic}>
               {topic}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+
+      {journals && journals.length > 1 && onJournalChange && (
+        <Select value={selectedJournal} onValueChange={onJournalChange}>
+          <SelectTrigger className="h-9 w-[260px] font-body text-sm bg-card">
+            <SelectValue placeholder="Все журналы" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Все журналы</SelectItem>
+            {journals.map((j) => (
+              <SelectItem key={j} value={j}>
+                {j}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       <Select value={selectedYear} onValueChange={onYearChange}>
         <SelectTrigger className="h-9 w-[140px] font-body text-sm bg-card">
@@ -53,11 +78,12 @@ const FilterPanel = ({
         </SelectContent>
       </Select>
 
-      {(selectedTopic !== "all" || selectedYear !== "all") && (
+      {hasFilters && (
         <button
           onClick={() => {
             onTopicChange("all");
             onYearChange("all");
+            onJournalChange?.("all");
           }}
           className="font-body text-sm text-accent hover:text-accent/80 transition-colors active:scale-95"
         >
