@@ -2,8 +2,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown } from "lucide-react";
+import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import CreateArticleDialog from "@/components/CreateArticleDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const JOURNALS = [
