@@ -30,7 +30,7 @@ const ArticleCard = ({ article, style }: ArticleCardProps) => {
     article.journal,
     article.year,
     article.volume && `Т. ${article.volume}`,
-    article.issue && `№ ${article.issue}`,
+    article.issue && (article.issue.startsWith("№") ? article.issue : `№ ${article.issue}`),
     article.pages && `С. ${article.pages}`,
   ]
     .filter(Boolean)
