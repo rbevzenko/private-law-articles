@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { BookOpen, Settings } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { BookOpen, Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics } from "@/hooks/useArticles";
 import { articles as staticArticles, TOPICS } from "@/data/articles";
@@ -8,11 +8,14 @@ import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
 import type { Article } from "@/data/articles";
 
+const PAGE_SIZE = 50;
+
 const Index = () => {
   const [search, setSearch] = useState("");
   const [topic, setTopic] = useState("all");
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
+  const [page, setPage] = useState(1);
 
   const { data: dbArticles, isLoading } = useArticles();
   const { data: dbTopics } = useArticleTopics();
@@ -65,6 +68,16 @@ const Index = () => {
     });
   }, [search, topic, year, journal, allArticles]);
 
+  // Reset page when filters change
+  const handleTopicChange = useCallback((v: string) => { setTopic(v); setPage(1); }, []);
+  const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
+  const handleJournalChange = useCallback((v: string) => { setJournal(v); setPage(1); }, []);
+  const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedArticles = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -107,17 +120,17 @@ const Index = () => {
           className="animate-fade-up space-y-4"
           style={{ animationDelay: "100ms" }}
         >
-          <SearchBar value={search} onChange={setSearch} />
+          <SearchBar value={search} onChange={handleSearchChange} />
           <FilterPanel
             selectedTopic={topic}
-            onTopicChange={setTopic}
+            onTopicChange={handleTopicChange}
             selectedYear={year}
-            onYearChange={setYear}
+            onYearChange={handleYearChange}
             years={years}
             topics={topics}
             journals={journals}
             selectedJournal={journal}
-            onJournalChange={setJournal}
+            onJournalChange={handleJournalChange}
           />
         </div>
       </section>
@@ -132,14 +145,41 @@ const Index = () => {
           </div>
         ) : (
           <>
-            <p className="mb-4 font-body text-sm text-muted-foreground">
-              {filtered.length}{" "}
-              {filtered.length === 1
-                ? "публикация"
-                : filtered.length < 5
-                ? "публикации"
-                : "публикаций"}
-            </p>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="font-body text-sm text-muted-foreground">
+                {filtered.length}{" "}
+                {filtered.length === 1
+                  ? "публикация"
+                  : filtered.length < 5
+                  ? "публикации"
+                  : "публикаций"}
+                {totalPages > 1 && (
+                  <span className="ml-2">
+                    · стр. {safePage} из {totalPages}
+                  </span>
+                )}
+              </p>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={safePage <= 1}
+                    className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Предыдущая страница"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={safePage >= totalPages}
+                    className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Следующая страница"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
 
             {filtered.length === 0 ? (
               <div className="py-16 text-center animate-fade-in">
@@ -148,15 +188,38 @@ const Index = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {filtered.map((article, i) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    style={{ animationDelay: `${Math.min(150 + i * 40, 800)}ms` }}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {paginatedArticles.map((article, i) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                      style={{ animationDelay: `${Math.min(80 + i * 20, 400)}ms` }}
+                    />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="mt-8 flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      disabled={safePage <= 1}
+                      className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Назад
+                    </button>
+                    <span className="font-body text-sm text-muted-foreground px-3">
+                      {safePage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      disabled={safePage >= totalPages}
+                      className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Вперёд →
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
