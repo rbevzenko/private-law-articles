@@ -45,17 +45,22 @@ export function useArticleTopics() {
   return useQuery({
     queryKey: ["article-topics"],
     queryFn: async (): Promise<string[]> => {
-      const { data, error } = await supabase
-        .from("articles")
-        .select("topics");
-
-      if (error) throw error;
-
       const allTopics = new Set<string>();
-      (data || []).forEach((row: any) => {
-        (row.topics || []).forEach((t: string) => allTopics.add(t));
-      });
-
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("articles")
+          .select("topics")
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        data.forEach((row: any) => {
+          (row.topics || []).forEach((t: string) => allTopics.add(t));
+        });
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
       return Array.from(allTopics).sort();
     },
   });
@@ -65,15 +70,20 @@ export function useArticleJournals() {
   return useQuery({
     queryKey: ["article-journals"],
     queryFn: async (): Promise<string[]> => {
-      const { data, error } = await supabase
-        .from("articles")
-        .select("journal");
-
-      if (error) throw error;
-
       const journals = new Set<string>();
-      (data || []).forEach((row: any) => journals.add(row.journal));
-
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("articles")
+          .select("journal")
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        data.forEach((row: any) => journals.add(row.journal));
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
       return Array.from(journals).sort();
     },
   });
