@@ -26,11 +26,27 @@ const ArticleCard = ({ article, style }: ArticleCardProps) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteArticle = useDeleteArticle();
 
+  const monthMap: Record<string, string> = {
+    'январь': '1', 'февраль': '2', 'март': '3', 'апрель': '4',
+    'май': '5', 'июнь': '6', 'июль': '7', 'август': '8',
+    'сентябрь': '9', 'октябрь': '10', 'ноябрь': '11', 'декабрь': '12',
+    'января': '1', 'февраля': '2', 'марта': '3', 'апреля': '4',
+    'мая': '5', 'июня': '6', 'июля': '7', 'августа': '8',
+    'сентября': '9', 'октября': '10', 'ноября': '11', 'декабря': '12',
+  };
+
+  const formatIssue = (issue: string) => {
+    const lower = issue.toLowerCase().trim();
+    const num = monthMap[lower];
+    if (num) return `№ ${num}`;
+    return issue.startsWith("№") ? issue : `№ ${issue}`;
+  };
+
   const citation = [
     article.journal,
     article.year,
     article.volume && `Т. ${article.volume}`,
-    article.issue && (article.issue.startsWith("№") ? article.issue : `№ ${article.issue}`),
+    article.issue && formatIssue(article.issue),
     article.pages && `С. ${article.pages}`,
   ]
     .filter(Boolean)
