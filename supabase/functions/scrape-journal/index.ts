@@ -171,6 +171,20 @@ function parsePrivlawIssue(markdown: string, year: number, issue: string): any[]
   return articles
 }
 
+const MONTH_TO_NUMBER: Record<string, string> = {
+  'январь': '1', 'февраль': '2', 'март': '3', 'апрель': '4',
+  'май': '5', 'июнь': '6', 'июль': '7', 'август': '8',
+  'сентябрь': '9', 'октябрь': '10', 'ноябрь': '11', 'декабрь': '12',
+  'января': '1', 'февраля': '2', 'марта': '3', 'апреля': '4',
+  'мая': '5', 'июня': '6', 'июля': '7', 'августа': '8',
+  'сентября': '9', 'октября': '10', 'ноября': '11', 'декабря': '12',
+}
+
+function monthToNumber(value: string): string {
+  const lower = value.toLowerCase().trim()
+  return MONTH_TO_NUMBER[lower] ? `№ ${MONTH_TO_NUMBER[lower]}` : value
+}
+
 // Parse Вестник экономического правосудия issue page
 function parseZakonIssue(markdown: string, year: number, month: string): any[] {
   const articles: any[] = []
