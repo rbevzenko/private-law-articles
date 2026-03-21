@@ -76,12 +76,17 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 sm:px-8 py-8 max-w-3xl">
         <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight mb-2">Сканирование журналов</h2>
-            <p className="text-muted-foreground font-body">
-              Выберите журнал и режим сканирования. При большом количестве номеров
-              сканирование может быть разбито на несколько запусков.
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-2">Управление статьями</h2>
+              <p className="text-muted-foreground font-body">
+                Сканируйте журналы или добавьте статью вручную.
+              </p>
+            </div>
+            <Button onClick={() => setCreateOpen(true)} className="shrink-0">
+              <Plus className="h-4 w-4 mr-1.5" />
+              Добавить статью
+            </Button>
           </div>
 
           <div className="flex items-center gap-3">
