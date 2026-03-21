@@ -47,3 +47,31 @@ export function useUpdateArticle() {
     onError: (e: Error) => toast.error(e.message),
   });
 }
+
+export interface CreateArticleInput {
+  title: string;
+  authors: string[];
+  journal: string;
+  year: number;
+  issue?: string | null;
+  section?: string | null;
+  topics: string[];
+  url?: string | null;
+}
+
+export function useCreateArticle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateArticleInput) => {
+      const { error } = await supabase.from("articles").insert(data);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["articles"] });
+      qc.invalidateQueries({ queryKey: ["article-topics"] });
+      qc.invalidateQueries({ queryKey: ["article-journals"] });
+      toast.success("Статья создана");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}

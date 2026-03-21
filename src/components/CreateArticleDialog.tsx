@@ -1,0 +1,132 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useCreateArticle } from "@/hooks/useArticleMutations";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
+  const [title, setTitle] = useState("");
+  const [authors, setAuthors] = useState("");
+  const [journal, setJournal] = useState("");
+  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [issue, setIssue] = useState("");
+  const [url, setUrl] = useState("");
+  const [topics, setTopics] = useState<string[]>([]);
+  const [newTopic, setNewTopic] = useState("");
+
+  const create = useCreateArticle();
+
+  const reset = () => {
+    setTitle(""); setAuthors(""); setJournal(""); setYear(String(new Date().getFullYear()));
+    setIssue(""); setUrl(""); setTopics([]); setNewTopic("");
+  };
+
+  const handleAddTopic = () => {
+    const t = newTopic.trim();
+    if (t && !topics.includes(t)) setTopics([...topics, t]);
+    setNewTopic("");
+  };
+
+  const handleTopicKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") { e.preventDefault(); handleAddTopic(); }
+  };
+
+  const handleSave = () => {
+    create.mutate(
+      {
+        title: title.trim(),
+        authors: authors.split(",").map((a) => a.trim()).filter(Boolean),
+        journal: journal.trim(),
+        year: Number(year),
+        issue: issue.trim() || null,
+        url: url.trim() || null,
+        topics,
+      },
+      { onSuccess: () => { reset(); onOpenChange(false); } }
+    );
+  };
+
+  const canSave = title.trim() && journal.trim() && year;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Новая статья</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div>
+            <Label htmlFor="create-title">Название</Label>
+            <Input id="create-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="create-authors">Авторы (через запятую)</Label>
+            <Input id="create-authors" value={authors} onChange={(e) => setAuthors(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="create-journal">Журнал</Label>
+              <Input id="create-journal" value={journal} onChange={(e) => setJournal(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="create-year">Год</Label>
+              <Input id="create-year" type="number" value={year} onChange={(e) => setYear(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="create-issue">Выпуск</Label>
+            <Input id="create-issue" value={issue} onChange={(e) => setIssue(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="create-url">URL статьи</Label>
+            <Input id="create-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+          </div>
+          <div>
+            <Label>Ключевые слова</Label>
+            <div className="flex flex-wrap gap-1.5 mt-1.5 mb-2 min-h-[32px]">
+              {topics.map((t) => (
+                <Badge key={t} variant="secondary" className="gap-1 pr-1">
+                  {t}
+                  <button
+                    type="button"
+                    onClick={() => setTopics(topics.filter((x) => x !== t))}
+                    className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/20 hover:text-destructive transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Добавить ключевое слово…"
+                value={newTopic}
+                onChange={(e) => setNewTopic(e.target.value)}
+                onKeyDown={handleTopicKeyDown}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={handleAddTopic} disabled={!newTopic.trim()}>
+                +
+              </Button>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Отмена</Button>
+          <Button onClick={handleSave} disabled={!canSave || create.isPending}>
+            {create.isPending ? "Создание..." : "Создать"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default CreateArticleDialog;

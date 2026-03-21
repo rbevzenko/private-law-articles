@@ -1,0 +1,1 @@
+CREATE POLICY "Articles are publicly insertable" ON public.articles FOR INSERT TO public WITH CHECK (true);

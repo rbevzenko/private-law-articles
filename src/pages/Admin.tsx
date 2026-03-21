@@ -2,8 +2,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown } from "lucide-react";
+import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import CreateArticleDialog from "@/components/CreateArticleDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const JOURNALS = [
@@ -20,6 +21,7 @@ const Admin = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [results, setResults] = useState<{ total: number; inserted: number; skipped: number; timedOut?: boolean } | null>(null);
   const [mode, setMode] = useState<ScrapeMode>("new");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const handleScrape = async (journalId: string) => {
     setScraping(journalId);
@@ -74,12 +76,17 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 sm:px-8 py-8 max-w-3xl">
         <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight mb-2">Сканирование журналов</h2>
-            <p className="text-muted-foreground font-body">
-              Выберите журнал и режим сканирования. При большом количестве номеров
-              сканирование может быть разбито на несколько запусков.
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-2">Управление статьями</h2>
+              <p className="text-muted-foreground font-body">
+                Сканируйте журналы или добавьте статью вручную.
+              </p>
+            </div>
+            <Button onClick={() => setCreateOpen(true)} className="shrink-0">
+              <Plus className="h-4 w-4 mr-1.5" />
+              Добавить статью
+            </Button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -176,6 +183,8 @@ const Admin = () => {
             </Card>
           )}
         </div>
+
+        <CreateArticleDialog open={createOpen} onOpenChange={setCreateOpen} />
       </main>
     </div>
   );
