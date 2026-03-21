@@ -41,7 +41,7 @@ async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<string>
       url,
       formats: ['markdown'],
       onlyMainContent: true,
-      waitFor: 2000,
+      waitFor: 1000,
     }),
   })
   const data = await response.json()
