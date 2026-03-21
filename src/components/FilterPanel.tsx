@@ -68,7 +68,7 @@ const FilterPanel = ({
         <SelectTrigger className="h-9 w-[140px] font-body text-sm bg-card">
           <SelectValue placeholder="Все годы" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-h-[300px] overflow-y-auto">
           <SelectItem value="all">Все годы</SelectItem>
           {years.map((year) => (
             <SelectItem key={year} value={String(year)}>
