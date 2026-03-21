@@ -21,6 +21,7 @@ const Admin = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [results, setResults] = useState<{ total: number; inserted: number; skipped: number; timedOut?: boolean } | null>(null);
   const [mode, setMode] = useState<ScrapeMode>("new");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const handleScrape = async (journalId: string) => {
     setScraping(journalId);
