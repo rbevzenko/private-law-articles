@@ -1,5 +1,20 @@
+import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Article } from "@/data/articles";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useDeleteArticle } from "@/hooks/useArticleMutations";
+import EditArticleDialog from "@/components/EditArticleDialog";
 
 interface ArticleCardProps {
   article: Article;
@@ -7,6 +22,10 @@ interface ArticleCardProps {
 }
 
 const ArticleCard = ({ article, style }: ArticleCardProps) => {
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleteArticle = useDeleteArticle();
+
   const citation = [
     article.journal,
     article.year,
@@ -18,40 +37,86 @@ const ArticleCard = ({ article, style }: ArticleCardProps) => {
     .join(". ");
 
   return (
-    <article
-      style={style}
-      className="group rounded-md border border-border bg-card p-6 transition-[box-shadow,transform] duration-300 ease-out hover:shadow-lg hover:shadow-primary/5 active:scale-[0.99]"
-    >
-      <div className="mb-3 flex flex-wrap gap-1.5">
-        {article.topics.map((topic) => (
-          <Badge
-            key={topic}
-            variant="secondary"
-            className="font-body text-xs font-medium tracking-wide"
+    <>
+      <article
+        style={style}
+        className="group relative rounded-md border border-border bg-card p-6 transition-[box-shadow,transform] duration-300 ease-out hover:shadow-lg hover:shadow-primary/5 active:scale-[0.99]"
+      >
+        {/* Action buttons */}
+        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={() => setEditOpen(true)}
+            title="Редактировать"
           >
-            {topic}
-          </Badge>
-        ))}
-      </div>
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            onClick={() => setDeleteOpen(true)}
+            title="Удалить"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
 
-      <h3 className="mb-2 text-lg font-semibold leading-snug tracking-tight text-foreground">
-        {article.title}
-      </h3>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {article.topics.map((topic) => (
+            <Badge
+              key={topic}
+              variant="secondary"
+              className="font-body text-xs font-medium tracking-wide"
+            >
+              {topic}
+            </Badge>
+          ))}
+        </div>
 
-      <p className="mb-2 font-body text-sm font-medium text-foreground/80">
-        {article.authors.join(", ")}
-      </p>
+        <h3 className="mb-2 text-lg font-semibold leading-snug tracking-tight text-foreground pr-16">
+          {article.title}
+        </h3>
 
-      <p className="mb-3 font-body text-sm text-muted-foreground">
-        {citation}
-      </p>
-
-      {article.abstract && (
-        <p className="font-body text-sm leading-relaxed text-muted-foreground line-clamp-3">
-          {article.abstract}
+        <p className="mb-2 font-body text-sm font-medium text-foreground/80">
+          {article.authors.join(", ")}
         </p>
-      )}
-    </article>
+
+        <p className="mb-3 font-body text-sm text-muted-foreground">
+          {citation}
+        </p>
+
+        {article.abstract && (
+          <p className="font-body text-sm leading-relaxed text-muted-foreground line-clamp-3">
+            {article.abstract}
+          </p>
+        )}
+      </article>
+
+      <EditArticleDialog article={article} open={editOpen} onOpenChange={setEditOpen} />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить статью?</AlertDialogTitle>
+            <AlertDialogDescription>
+              «{article.title}» будет удалена без возможности восстановления.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteArticle.mutate(article.id)}
+            >
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
