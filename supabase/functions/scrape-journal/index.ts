@@ -450,6 +450,7 @@ Deno.serve(async (req) => {
         total_found: allArticles.length,
         inserted,
         skipped,
+        errors,
         timed_out: timedOut,
         logs,
       }),
