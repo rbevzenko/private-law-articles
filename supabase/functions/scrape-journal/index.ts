@@ -249,9 +249,10 @@ function makeIssueKey(year: number, issue: string): string {
   return `${year}|${issue}`
 }
 
-// ─── Time guard ──────────────────────────────────────────
+// ─── Time guard & parallel processing ────────────────────
 
 const MAX_RUNTIME_MS = 55_000 // 55s safety margin (edge fn limit ~60s)
+const PARALLEL_LIMIT = 3
 
 function isTimeUp(startTime: number): boolean {
   return Date.now() - startTime > MAX_RUNTIME_MS
