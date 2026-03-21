@@ -183,6 +183,8 @@ const Admin = () => {
             </Card>
           )}
         </div>
+
+        <CreateArticleDialog open={createOpen} onOpenChange={setCreateOpen} />
       </main>
     </div>
   );
