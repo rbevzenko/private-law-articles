@@ -41,7 +41,7 @@ async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<string>
       url,
       formats: ['markdown'],
       onlyMainContent: true,
-      waitFor: 2000,
+      waitFor: 1000,
     }),
   })
   const data = await response.json()
@@ -249,9 +249,10 @@ function makeIssueKey(year: number, issue: string): string {
   return `${year}|${issue}`
 }
 
-// ─── Time guard ──────────────────────────────────────────
+// ─── Time guard & parallel processing ────────────────────
 
-const MAX_RUNTIME_MS = 50_000 // 50s safety margin (edge fn limit ~60s)
+const MAX_RUNTIME_MS = 55_000 // 55s safety margin (edge fn limit ~60s)
+const PARALLEL_LIMIT = 3
 
 function isTimeUp(startTime: number): boolean {
   return Date.now() - startTime > MAX_RUNTIME_MS
@@ -319,16 +320,22 @@ Deno.serve(async (req) => {
         logs.push(`Новых номеров для сканирования: ${issues.length}`)
       }
 
-      for (const issue of issues) {
+      for (let i = 0; i < issues.length; i += PARALLEL_LIMIT) {
         if (isTimeUp(startTime)) { timedOut = true; logs.push('⏱ Лимит времени — продолжите сканирование повторным запуском'); break }
-        try {
+        const batch = issues.slice(i, i + PARALLEL_LIMIT)
+        const batchResults = await Promise.allSettled(batch.map(async (issue) => {
           logs.push(`Сканирую: ${issue.issue} ${issue.year}`)
           const issuePage = await scrapeWithFirecrawl(issue.url, firecrawlKey)
-          const articles = parseMvgpIssue(issuePage, issue.year, issue.issue)
-          allArticles.push(...articles)
-          logs.push(`Найдено ${articles.length} статей в ${issue.issue} ${issue.year}`)
-        } catch (e) {
-          logs.push(`❌ Ошибка ${issue.url}: ${e.message}`)
+          return parseMvgpIssue(issuePage, issue.year, issue.issue)
+        }))
+        for (let j = 0; j < batchResults.length; j++) {
+          const r = batchResults[j]
+          if (r.status === 'fulfilled') {
+            allArticles.push(...r.value)
+            logs.push(`Найдено ${r.value.length} статей в ${batch[j].issue} ${batch[j].year}`)
+          } else {
+            logs.push(`❌ Ошибка ${batch[j].url}: ${r.reason?.message || r.reason}`)
+          }
         }
       }
     } else if (journal === 'privlaw') {
@@ -342,16 +349,22 @@ Deno.serve(async (req) => {
         logs.push(`Новых номеров для сканирования: ${issues.length}`)
       }
 
-      for (const issue of issues) {
+      for (let i = 0; i < issues.length; i += PARALLEL_LIMIT) {
         if (isTimeUp(startTime)) { timedOut = true; logs.push('⏱ Лимит времени — продолжите сканирование повторным запуском'); break }
-        try {
+        const batch = issues.slice(i, i + PARALLEL_LIMIT)
+        const batchResults = await Promise.allSettled(batch.map(async (issue) => {
           logs.push(`Сканирую: ${issue.issue} ${issue.year}`)
           const issuePage = await scrapeWithFirecrawl(issue.url, firecrawlKey)
-          const articles = parsePrivlawIssue(issuePage, issue.year, issue.issue)
-          allArticles.push(...articles)
-          logs.push(`Найдено ${articles.length} статей в ${issue.issue} ${issue.year}`)
-        } catch (e) {
-          logs.push(`❌ Ошибка ${issue.url}: ${e.message}`)
+          return parsePrivlawIssue(issuePage, issue.year, issue.issue)
+        }))
+        for (let j = 0; j < batchResults.length; j++) {
+          const r = batchResults[j]
+          if (r.status === 'fulfilled') {
+            allArticles.push(...r.value)
+            logs.push(`Найдено ${r.value.length} статей в ${batch[j].issue} ${batch[j].year}`)
+          } else {
+            logs.push(`❌ Ошибка ${batch[j].url}: ${r.reason?.message || r.reason}`)
+          }
         }
       }
     } else if (journal === 'zakon') {
@@ -369,16 +382,22 @@ Deno.serve(async (req) => {
         issues = filteredIssues
       }
 
-      for (const issue of issues) {
+      for (let i = 0; i < issues.length; i += PARALLEL_LIMIT) {
         if (isTimeUp(startTime)) { timedOut = true; logs.push('⏱ Лимит времени — продолжите сканирование повторным запуском'); break }
-        try {
+        const batch = issues.slice(i, i + PARALLEL_LIMIT)
+        const batchResults = await Promise.allSettled(batch.map(async (issue) => {
           logs.push(`Сканирую: ${issue.month} ${issue.year}`)
           const issuePage = await scrapeWithFirecrawl(issue.url, firecrawlKey)
-          const articles = parseZakonIssue(issuePage, issue.year, issue.month)
-          allArticles.push(...articles)
-          logs.push(`Найдено ${articles.length} статей в ${issue.month} ${issue.year}`)
-        } catch (e) {
-          logs.push(`❌ Ошибка ${issue.url}: ${e.message}`)
+          return parseZakonIssue(issuePage, issue.year, issue.month)
+        }))
+        for (let j = 0; j < batchResults.length; j++) {
+          const r = batchResults[j]
+          if (r.status === 'fulfilled') {
+            allArticles.push(...r.value)
+            logs.push(`Найдено ${r.value.length} статей в ${batch[j].month} ${batch[j].year}`)
+          } else {
+            logs.push(`❌ Ошибка ${batch[j].url}: ${r.reason?.message || r.reason}`)
+          }
         }
       }
     }
