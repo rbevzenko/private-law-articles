@@ -1,0 +1,10 @@
+UPDATE articles SET title = 'Передача движимой вещи', authors = ARRAY['Г.С. Васильев'] WHERE id = '68650cb6-4adf-425f-a33b-36632ca38462';
+UPDATE articles SET title = 'Заключение договора', authors = ARRAY['Е.А. Крашенинников', 'Ю.В. Байгушева'] WHERE id = '0c2f9fe7-c828-40f7-a0f3-0a27a4748b91';
+UPDATE articles SET title = 'К вопросу об объявлении судебного решения', authors = ARRAY['Д.В. Афанасьев'] WHERE id = 'f77d1eb7-48f3-4719-b012-a2fa5b83990f';
+UPDATE articles SET title = 'Представительство без полномочия', authors = ARRAY['Е.А. Крашенинников', 'Ю.В. Байгушева'] WHERE id = '7ba6a222-9a72-45ff-84cc-d0e28f493102';
+UPDATE articles SET title = 'Публичная собственность на землю: проблемы распоряжения', authors = ARRAY['А.И. Грибова', 'Н.П. Лотникова'] WHERE id = '493233fe-64b6-482f-adc5-27e79a0db913';
+UPDATE articles SET title = 'О праве суда изменить основание требования собрания кредиторов', authors = ARRAY['С.А. Кузнецов'] WHERE id = '2d18bfed-a130-43a8-804d-82124429c8eb';
+UPDATE articles SET title = 'Момент возникновения залога в силу запрета на распоряжение имуществом', authors = ARRAY['А.И. Тимошин'] WHERE id = '71e6e220-7818-4240-86c3-694c9d9edcea';
+UPDATE articles SET title = 'Правовые проблемы определения субъектов ответственности за необоснованное списание акций', authors = ARRAY['Д.В. Ломакин'] WHERE id = 'c4b7f92b-bea2-485b-8ab4-ed44db5fdd2f';
+UPDATE articles SET title = 'О преюдиции как основании возникновения гражданских прав и обязанностей', authors = ARRAY['Ю.А. Тарасенко'] WHERE id = 'a3e5b39e-7d3f-41d4-a9b0-1da5cc0f88b4';
+UPDATE articles SET title = 'Споры «ни о чем» (конституционно-правовой аспект)', authors = ARRAY['А.А. Муравьев'] WHERE id = '5f61ea1b-4b63-4f7b-8b1b-a22f4dc8bfb8';
