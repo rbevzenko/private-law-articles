@@ -19,9 +19,10 @@ import EditArticleDialog from "@/components/EditArticleDialog";
 interface ArticleCardProps {
   article: Article;
   style?: React.CSSProperties;
+  canEdit?: boolean;
 }
 
-const ArticleCard = ({ article, style }: ArticleCardProps) => {
+const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteArticle = useDeleteArticle();
