@@ -15,6 +15,7 @@ const Index = () => {
   const [topic, setTopic] = useState("all");
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
+  const [issue, setIssue] = useState("all");
   const [page, setPage] = useState(1);
 
   const { data: dbArticles, isLoading } = useArticles();
