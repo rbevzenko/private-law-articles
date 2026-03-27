@@ -123,10 +123,10 @@ const Index = () => {
       <section className="container mx-auto px-4 pt-12 pb-8 sm:px-8 sm:pt-16 sm:pb-10">
         <div className="animate-fade-up max-w-2xl">
           <h2 className="text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-            Библиографический каталог статей по частному праву
+            Библиографический каталог научных публикаций по частному праву
           </h2>
           <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed max-w-xl">
-            Систематизированное собрание научных публикаций по&nbsp;основным институтам частного права — от&nbsp;обязательственного до&nbsp;международного частного.
+            Систематизированное собрание научных публикаций по&nbsp;основным институтам частного права в&nbsp;периодических изданиях
           </p>
         </div>
       </section>
