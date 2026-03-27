@@ -238,6 +238,7 @@ const Index = () => {
                     <ArticleCard
                       key={article.id}
                       article={article}
+                      canEdit={!!user}
                       style={{ animationDelay: `${Math.min(80 + i * 20, 400)}ms` }}
                     />
                   ))}
