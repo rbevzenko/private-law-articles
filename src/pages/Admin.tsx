@@ -18,6 +18,7 @@ const JOURNALS = [
 type ScrapeMode = "new" | "all";
 
 const Admin = () => {
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [scraping, setScraping] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
