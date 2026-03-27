@@ -71,6 +71,7 @@ const Index = () => {
       if (topic !== "all" && !a.topics.includes(topic)) return false;
       if (year !== "all" && a.year !== Number(year)) return false;
       if (journal !== "all" && a.journal !== journal) return false;
+      if (issue !== "all" && a.issue !== issue) return false;
       if (
         q &&
         !a.title.toLowerCase().includes(q) &&
