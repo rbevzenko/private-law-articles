@@ -26,6 +26,18 @@ const Admin = () => {
   const [mode, setMode] = useState<ScrapeMode>("new");
   const [createOpen, setCreateOpen] = useState(false);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   const handleScrape = async (journalId: string) => {
     setScraping(journalId);
     setLogs([`Режим: ${mode === "new" ? "только новые номера" : "все номера"}. Начинаю...`]);
