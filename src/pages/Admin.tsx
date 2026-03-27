@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus } from "lucide-react";
@@ -16,12 +18,25 @@ const JOURNALS = [
 type ScrapeMode = "new" | "all";
 
 const Admin = () => {
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [scraping, setScraping] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [results, setResults] = useState<{ total: number; inserted: number; skipped: number; timedOut?: boolean } | null>(null);
   const [mode, setMode] = useState<ScrapeMode>("new");
   const [createOpen, setCreateOpen] = useState(false);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleScrape = async (journalId: string) => {
     setScraping(journalId);

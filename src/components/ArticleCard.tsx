@@ -19,9 +19,10 @@ import EditArticleDialog from "@/components/EditArticleDialog";
 interface ArticleCardProps {
   article: Article;
   style?: React.CSSProperties;
+  canEdit?: boolean;
 }
 
-const ArticleCard = ({ article, style }: ArticleCardProps) => {
+const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteArticle = useDeleteArticle();
@@ -59,26 +60,28 @@ const ArticleCard = ({ article, style }: ArticleCardProps) => {
         className="group relative rounded-md border border-border bg-card p-6 transition-[box-shadow,transform] duration-300 ease-out hover:shadow-lg hover:shadow-primary/5 active:scale-[0.99]"
       >
         {/* Action buttons */}
-        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-            onClick={() => setEditOpen(true)}
-            title="Редактировать"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-            onClick={() => setDeleteOpen(true)}
-            title="Удалить"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => setEditOpen(true)}
+              title="Редактировать"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => setDeleteOpen(true)}
+              title="Удалить"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
 
         <div className="mb-3 flex flex-wrap gap-1.5">
           {article.topics.map((topic) => (

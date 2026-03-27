@@ -1,11 +1,13 @@
 import { useMemo, useState, useCallback } from "react";
-import { BookOpen, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics } from "@/hooks/useArticles";
+import { useAuth } from "@/hooks/useAuth";
 import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
+import { Button } from "@/components/ui/button";
 import type { Article } from "@/data/articles";
 
 const PAGE_SIZE = 50;
@@ -20,6 +22,7 @@ const Index = () => {
 
   const { data: dbArticles, isLoading } = useArticles();
   const { data: dbTopics } = useArticleTopics();
+  const { user, signOut } = useAuth();
 
   // Merge DB articles with static ones, preferring DB
   const allArticles: Article[] = useMemo(() => {
@@ -107,14 +110,35 @@ const Index = () => {
           <span className="hidden sm:inline font-body text-sm text-muted-foreground ml-1">
             — библиография
           </span>
-          <div className="ml-auto">
-            <Link
-              to="/admin"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              title="Управление каталогом"
-            >
-              <Settings className="h-5 w-5" />
-            </Link>
+          <div className="ml-auto flex items-center gap-2">
+            {user ? (
+              <>
+                <Link
+                  to="/admin"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  title="Управление каталогом"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={signOut}
+                  title="Выйти"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="Войти"
+              >
+                <LogIn className="h-5 w-5" />
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -214,6 +238,7 @@ const Index = () => {
                     <ArticleCard
                       key={article.id}
                       article={article}
+                      canEdit={!!user}
                       style={{ animationDelay: `${Math.min(80 + i * 20, 400)}ms` }}
                     />
                   ))}
