@@ -81,7 +81,7 @@ const Index = () => {
         return false;
       return true;
     });
-  }, [search, topic, year, journal, allArticles]);
+  }, [search, topic, year, journal, issue, allArticles]);
 
   // Reset page when filters change
   const handleTopicChange = useCallback((v: string) => { setTopic(v); setPage(1); }, []);
