@@ -110,14 +110,35 @@ const Index = () => {
           <span className="hidden sm:inline font-body text-sm text-muted-foreground ml-1">
             — библиография
           </span>
-          <div className="ml-auto">
-            <Link
-              to="/admin"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              title="Управление каталогом"
-            >
-              <Settings className="h-5 w-5" />
-            </Link>
+          <div className="ml-auto flex items-center gap-2">
+            {user ? (
+              <>
+                <Link
+                  to="/admin"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  title="Управление каталогом"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={signOut}
+                  title="Выйти"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="Войти"
+              >
+                <LogIn className="h-5 w-5" />
+              </Link>
+            )}
           </div>
         </div>
       </header>
