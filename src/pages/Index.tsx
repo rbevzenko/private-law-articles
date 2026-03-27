@@ -86,7 +86,9 @@ const Index = () => {
   // Reset page when filters change
   const handleTopicChange = useCallback((v: string) => { setTopic(v); setPage(1); }, []);
   const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
-  const handleJournalChange = useCallback((v: string) => { setJournal(v); setPage(1); }, []);
+  const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
+  const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
+  const handleYearChangeWithIssueReset = useCallback((v: string) => { setYear(v); setIssue("all"); setPage(1); }, []);
   const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
