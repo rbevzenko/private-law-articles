@@ -17,6 +17,9 @@ interface FilterPanelProps {
   journals?: string[];
   selectedJournal?: string;
   onJournalChange?: (journal: string) => void;
+  issues?: string[];
+  selectedIssue?: string;
+  onIssueChange?: (issue: string) => void;
 }
 
 const FilterPanel = ({
@@ -29,8 +32,11 @@ const FilterPanel = ({
   journals,
   selectedJournal = "all",
   onJournalChange,
+  issues,
+  selectedIssue = "all",
+  onIssueChange,
 }: FilterPanelProps) => {
-  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all";
+  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all" || selectedIssue !== "all";
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -78,12 +84,29 @@ const FilterPanel = ({
         </SelectContent>
       </Select>
 
+      {issues && issues.length > 0 && onIssueChange && (
+        <Select value={selectedIssue} onValueChange={onIssueChange}>
+          <SelectTrigger className="h-9 w-[140px] font-body text-sm bg-card">
+            <SelectValue placeholder="Все номера" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] overflow-y-auto">
+            <SelectItem value="all">Все номера</SelectItem>
+            {issues.map((iss) => (
+              <SelectItem key={iss} value={iss}>
+                {iss}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
       {hasFilters && (
         <button
           onClick={() => {
             onTopicChange("all");
             onYearChange("all");
             onJournalChange?.("all");
+            onIssueChange?.("all");
           }}
           className="font-body text-sm text-accent hover:text-accent/80 transition-colors active:scale-95"
         >

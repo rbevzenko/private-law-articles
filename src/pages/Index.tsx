@@ -15,6 +15,7 @@ const Index = () => {
   const [topic, setTopic] = useState("all");
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
+  const [issue, setIssue] = useState("all");
   const [page, setPage] = useState(1);
 
   const { data: dbArticles, isLoading } = useArticles();
@@ -51,12 +52,26 @@ const Index = () => {
     [allArticles]
   );
 
+  const issues = useMemo(() => {
+    const relevant = allArticles.filter((a) => {
+      if (journal !== "all" && a.journal !== journal) return false;
+      if (year !== "all" && a.year !== Number(year)) return false;
+      return !!a.issue;
+    });
+    return [...new Set(relevant.map((a) => a.issue!))].sort((a, b) => {
+      const na = parseInt(a), nb = parseInt(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return a.localeCompare(b);
+    });
+  }, [allArticles, journal, year]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return allArticles.filter((a) => {
       if (topic !== "all" && !a.topics.includes(topic)) return false;
       if (year !== "all" && a.year !== Number(year)) return false;
       if (journal !== "all" && a.journal !== journal) return false;
+      if (issue !== "all" && a.issue !== issue) return false;
       if (
         q &&
         !a.title.toLowerCase().includes(q) &&
@@ -66,12 +81,14 @@ const Index = () => {
         return false;
       return true;
     });
-  }, [search, topic, year, journal, allArticles]);
+  }, [search, topic, year, journal, issue, allArticles]);
 
   // Reset page when filters change
   const handleTopicChange = useCallback((v: string) => { setTopic(v); setPage(1); }, []);
   const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
-  const handleJournalChange = useCallback((v: string) => { setJournal(v); setPage(1); }, []);
+  const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
+  const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
+  const handleYearChangeWithIssueReset = useCallback((v: string) => { setYear(v); setIssue("all"); setPage(1); }, []);
   const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -125,12 +142,15 @@ const Index = () => {
             selectedTopic={topic}
             onTopicChange={handleTopicChange}
             selectedYear={year}
-            onYearChange={handleYearChange}
+            onYearChange={handleYearChangeWithIssueReset}
             years={years}
             topics={topics}
             journals={journals}
             selectedJournal={journal}
             onJournalChange={handleJournalChange}
+            issues={issues}
+            selectedIssue={issue}
+            onIssueChange={handleIssueChange}
           />
         </div>
       </section>
