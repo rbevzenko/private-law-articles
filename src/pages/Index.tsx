@@ -142,12 +142,15 @@ const Index = () => {
             selectedTopic={topic}
             onTopicChange={handleTopicChange}
             selectedYear={year}
-            onYearChange={handleYearChange}
+            onYearChange={handleYearChangeWithIssueReset}
             years={years}
             topics={topics}
             journals={journals}
             selectedJournal={journal}
             onJournalChange={handleJournalChange}
+            issues={issues}
+            selectedIssue={issue}
+            onIssueChange={handleIssueChange}
           />
         </div>
       </section>

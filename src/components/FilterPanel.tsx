@@ -84,12 +84,29 @@ const FilterPanel = ({
         </SelectContent>
       </Select>
 
+      {issues && issues.length > 0 && onIssueChange && (
+        <Select value={selectedIssue} onValueChange={onIssueChange}>
+          <SelectTrigger className="h-9 w-[140px] font-body text-sm bg-card">
+            <SelectValue placeholder="Все номера" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] overflow-y-auto">
+            <SelectItem value="all">Все номера</SelectItem>
+            {issues.map((iss) => (
+              <SelectItem key={iss} value={iss}>
+                {iss}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
       {hasFilters && (
         <button
           onClick={() => {
             onTopicChange("all");
             onYearChange("all");
             onJournalChange?.("all");
+            onIssueChange?.("all");
           }}
           className="font-body text-sm text-accent hover:text-accent/80 transition-colors active:scale-95"
         >
