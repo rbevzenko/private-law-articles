@@ -22,6 +22,7 @@ const Index = () => {
 
   const { data: dbArticles, isLoading } = useArticles();
   const { data: dbTopics } = useArticleTopics();
+  const { user, signOut } = useAuth();
 
   // Merge DB articles with static ones, preferring DB
   const allArticles: Article[] = useMemo(() => {
