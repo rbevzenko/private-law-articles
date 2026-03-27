@@ -17,6 +17,9 @@ interface FilterPanelProps {
   journals?: string[];
   selectedJournal?: string;
   onJournalChange?: (journal: string) => void;
+  issues?: string[];
+  selectedIssue?: string;
+  onIssueChange?: (issue: string) => void;
 }
 
 const FilterPanel = ({
