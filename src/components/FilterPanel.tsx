@@ -32,8 +32,11 @@ const FilterPanel = ({
   journals,
   selectedJournal = "all",
   onJournalChange,
+  issues,
+  selectedIssue = "all",
+  onIssueChange,
 }: FilterPanelProps) => {
-  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all";
+  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all" || selectedIssue !== "all";
 
   return (
     <div className="flex flex-wrap items-center gap-3">
