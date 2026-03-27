@@ -1,0 +1,1 @@
+UPDATE articles SET issue = TRIM(REPLACE(issue, '№', '')) WHERE issue LIKE '%№%';
