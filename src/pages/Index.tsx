@@ -1,11 +1,13 @@
 import { useMemo, useState, useCallback } from "react";
-import { BookOpen, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics } from "@/hooks/useArticles";
+import { useAuth } from "@/hooks/useAuth";
 import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
+import { Button } from "@/components/ui/button";
 import type { Article } from "@/data/articles";
 
 const PAGE_SIZE = 50;
