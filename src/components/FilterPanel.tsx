@@ -20,6 +20,9 @@ interface FilterPanelProps {
   issues?: string[];
   selectedIssue?: string;
   onIssueChange?: (issue: string) => void;
+  authors?: string[];
+  selectedAuthor?: string;
+  onAuthorChange?: (author: string) => void;
 }
 
 const FilterPanel = ({
