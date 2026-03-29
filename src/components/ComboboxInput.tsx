@@ -10,7 +10,7 @@ interface ComboboxInputProps {
   id?: string;
 }
 
-const ComboboxInput = ({ value, onChange, suggestions, placeholder, id }: ComboboxInputProps) => {
+const ComboboxInput = ({ value, onChange, suggestions, placeholder, id, onKeyDown }: ComboboxInputProps) => {
   const [open, setOpen] = useState(false);
   const [filtered, setFiltered] = useState<string[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
