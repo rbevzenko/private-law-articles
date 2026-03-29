@@ -98,6 +98,7 @@ const Index = () => {
   const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
   const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
   const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
+  const handleAuthorChange = useCallback((v: string) => { setAuthor(v); setPage(1); }, []);
   const handleYearChangeWithIssueReset = useCallback((v: string) => { setYear(v); setIssue("all"); setPage(1); }, []);
   const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
 
