@@ -80,12 +80,12 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
           </div>
           <div>
             <Label htmlFor="create-authors">Авторы (через запятую)</Label>
-            <Input id="create-authors" value={authors} onChange={(e) => setAuthors(e.target.value)} />
+            <ComboboxInput id="create-authors" value={authors} onChange={setAuthors} suggestions={authorSuggestions} placeholder="Начните вводить имя автора…" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="create-journal">Журнал</Label>
-              <Input id="create-journal" value={journal} onChange={(e) => setJournal(e.target.value)} />
+              <ComboboxInput id="create-journal" value={journal} onChange={setJournal} suggestions={allJournals || []} placeholder="Начните вводить название…" />
             </div>
             <div>
               <Label htmlFor="create-year">Год</Label>
