@@ -183,6 +183,9 @@ const Index = () => {
             issues={issues}
             selectedIssue={issue}
             onIssueChange={handleIssueChange}
+            authors={authors}
+            selectedAuthor={author}
+            onAuthorChange={handleAuthorChange}
           />
         </div>
       </section>
