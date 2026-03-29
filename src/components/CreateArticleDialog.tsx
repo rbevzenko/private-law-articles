@@ -122,6 +122,7 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
                 onChange={setNewTopic}
                 suggestions={(allTopics || []).filter((t) => !topics.includes(t))}
                 placeholder="Добавить ключевое слово…"
+                onKeyDown={handleTopicKeyDown}
               />
               <Button type="button" variant="outline" size="sm" onClick={handleAddTopic} disabled={!newTopic.trim()}>
                 +
