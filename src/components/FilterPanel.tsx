@@ -128,6 +128,7 @@ const FilterPanel = ({
             onTopicChange("all");
             onYearChange("all");
             onJournalChange?.("all");
+            onAuthorChange?.("all");
             onIssueChange?.("all");
           }}
           className="font-body text-sm text-accent hover:text-accent/80 transition-colors active:scale-95"
