@@ -56,6 +56,11 @@ const Index = () => {
     [allArticles]
   );
 
+  const authors = useMemo(
+    () => [...new Set(allArticles.flatMap((a) => a.authors).filter((a) => a && a !== "Автор не указан"))].sort(),
+    [allArticles]
+  );
+
   const issues = useMemo(() => {
     const relevant = allArticles.filter((a) => {
       if (journal !== "all" && a.journal !== journal) return false;
