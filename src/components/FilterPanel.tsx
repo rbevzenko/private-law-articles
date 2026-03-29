@@ -90,6 +90,22 @@ const FilterPanel = ({
         </SelectContent>
       </Select>
 
+      {authors && authors.length > 0 && onAuthorChange && (
+        <Select value={selectedAuthor} onValueChange={onAuthorChange}>
+          <SelectTrigger className="h-9 w-[260px] font-body text-sm bg-card">
+            <SelectValue placeholder="Все авторы" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] overflow-y-auto">
+            <SelectItem value="all">Все авторы</SelectItem>
+            {authors.map((a) => (
+              <SelectItem key={a} value={a}>
+                {a}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
       {issues && issues.length > 0 && onIssueChange && (
         <Select value={selectedIssue} onValueChange={onIssueChange}>
           <SelectTrigger className="h-9 w-[140px] font-body text-sm bg-card">
