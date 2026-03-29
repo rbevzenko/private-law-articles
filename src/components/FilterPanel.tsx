@@ -1,4 +1,5 @@
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -6,10 +7,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface FilterPanelProps {
-  selectedTopic: string;
-  onTopicChange: (topic: string) => void;
+  selectedTopics: string[];
+  onTopicsChange: (topics: string[]) => void;
   selectedYear: string;
   onYearChange: (year: string) => void;
   years: number[];
@@ -26,8 +32,8 @@ interface FilterPanelProps {
 }
 
 const FilterPanel = ({
-  selectedTopic,
-  onTopicChange,
+  selectedTopics,
+  onTopicsChange,
   selectedYear,
   onYearChange,
   years,
@@ -42,23 +48,49 @@ const FilterPanel = ({
   selectedAuthor = "all",
   onAuthorChange,
 }: FilterPanelProps) => {
-  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all" || selectedIssue !== "all" || selectedAuthor !== "all";
+  const [topicsOpen, setTopicsOpen] = useState(false);
+  const hasFilters = selectedTopics.length > 0 || selectedYear !== "all" || selectedJournal !== "all" || selectedIssue !== "all" || selectedAuthor !== "all";
+
+  const toggleTopic = (topic: string) => {
+    if (selectedTopics.includes(topic)) {
+      onTopicsChange(selectedTopics.filter((t) => t !== topic));
+    } else {
+      onTopicsChange([...selectedTopics, topic]);
+    }
+  };
+
+  const topicsLabel = selectedTopics.length === 0
+    ? "Все темы"
+    : selectedTopics.length === 1
+    ? selectedTopics[0]
+    : `Темы: ${selectedTopics.length}`;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Select value={selectedTopic} onValueChange={onTopicChange}>
-        <SelectTrigger className="h-9 w-[220px] font-body text-sm bg-card">
-          <SelectValue placeholder="Все темы" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Все темы</SelectItem>
+      <Popover open={topicsOpen} onOpenChange={setTopicsOpen}>
+        <PopoverTrigger asChild>
+          <button className="h-9 w-[220px] inline-flex items-center justify-between rounded-md border border-input bg-card px-3 font-body text-sm hover:bg-accent/50 transition-colors">
+            <span className={selectedTopics.length === 0 ? "text-muted-foreground" : "text-foreground"}>
+              {topicsLabel}
+            </span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[220px] p-1" align="start">
           {topics.map((topic) => (
-            <SelectItem key={topic} value={topic}>
+            <button
+              key={topic}
+              onClick={() => toggleTopic(topic)}
+              className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <div className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center ${selectedTopics.includes(topic) ? "bg-primary border-primary" : "border-input"}`}>
+                {selectedTopics.includes(topic) && <Check className="h-3 w-3 text-primary-foreground" />}
+              </div>
               {topic}
-            </SelectItem>
+            </button>
           ))}
-        </SelectContent>
-      </Select>
+        </PopoverContent>
+      </Popover>
 
       {journals && journals.length > 1 && onJournalChange && (
         <Select value={selectedJournal} onValueChange={onJournalChange}>
@@ -125,7 +157,7 @@ const FilterPanel = ({
       {hasFilters && (
         <button
           onClick={() => {
-            onTopicChange("all");
+            onTopicsChange([]);
             onYearChange("all");
             onJournalChange?.("all");
             onAuthorChange?.("all");

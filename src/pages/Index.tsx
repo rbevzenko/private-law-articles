@@ -14,7 +14,7 @@ const PAGE_SIZE = 50;
 
 const Index = () => {
   const [search, setSearch] = useState("");
-  const [topic, setTopic] = useState("all");
+  const [topics, setTopics] = useState<string[]>([]);
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
   const [issue, setIssue] = useState("all");
@@ -77,7 +77,7 @@ const Index = () => {
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return allArticles.filter((a) => {
-      if (topic !== "all" && !a.topics.includes(topic)) return false;
+      if (topics.length > 0 && !topics.some((t) => a.topics.includes(t))) return false;
       if (year !== "all" && a.year !== Number(year)) return false;
       if (journal !== "all" && a.journal !== journal) return false;
       if (issue !== "all" && a.issue !== issue) return false;
@@ -94,7 +94,7 @@ const Index = () => {
   }, [search, topic, year, journal, issue, author, allArticles]);
 
   // Reset page when filters change
-  const handleTopicChange = useCallback((v: string) => { setTopic(v); setPage(1); }, []);
+  const handleTopicsChange = useCallback((v: string[]) => { setTopics(v); setPage(1); }, []);
   const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
   const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
   const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
@@ -171,8 +171,8 @@ const Index = () => {
         >
           <SearchBar value={search} onChange={handleSearchChange} />
           <FilterPanel
-            selectedTopic={topic}
-            onTopicChange={handleTopicChange}
+            selectedTopics={topics}
+            onTopicsChange={handleTopicsChange}
             selectedYear={year}
             onYearChange={handleYearChangeWithIssueReset}
             years={years}
