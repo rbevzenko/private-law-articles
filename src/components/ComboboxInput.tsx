@@ -40,6 +40,7 @@ const ComboboxInput = ({ value, onChange, suggestions, placeholder, id, onKeyDow
         onChange={(e) => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder={placeholder}
+        onKeyDown={onKeyDown}
         autoComplete="off"
       />
       {open && filtered.length > 0 && (
