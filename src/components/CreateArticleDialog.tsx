@@ -25,7 +25,16 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
   const [newTopic, setNewTopic] = useState("");
 
   const create = useCreateArticle();
+  const { data: allArticles } = useArticles();
+  const { data: allTopics } = useArticleTopics();
+  const { data: allJournals } = useArticleJournals();
 
+  const authorSuggestions = useMemo(() => {
+    if (!allArticles) return [];
+    const set = new Set<string>();
+    allArticles.forEach((a) => a.authors.forEach((au) => { if (au && au !== "Автор не указан") set.add(au); }));
+    return Array.from(set).sort();
+  }, [allArticles]);
   const reset = () => {
     setTitle(""); setAuthors(""); setJournal(""); setYear(String(new Date().getFullYear()));
     setIssue(""); setUrl(""); setTopics([]); setNewTopic("");
