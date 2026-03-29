@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCreateArticle } from "@/hooks/useArticleMutations";
+import { useArticles, useArticleTopics, useArticleJournals } from "@/hooks/useArticles";
+import ComboboxInput from "@/components/ComboboxInput";
 
 interface Props {
   open: boolean;
@@ -23,7 +25,16 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
   const [newTopic, setNewTopic] = useState("");
 
   const create = useCreateArticle();
+  const { data: allArticles } = useArticles();
+  const { data: allTopics } = useArticleTopics();
+  const { data: allJournals } = useArticleJournals();
 
+  const authorSuggestions = useMemo(() => {
+    if (!allArticles) return [];
+    const set = new Set<string>();
+    allArticles.forEach((a) => a.authors.forEach((au) => { if (au && au !== "Автор не указан") set.add(au); }));
+    return Array.from(set).sort();
+  }, [allArticles]);
   const reset = () => {
     setTitle(""); setAuthors(""); setJournal(""); setYear(String(new Date().getFullYear()));
     setIssue(""); setUrl(""); setTopics([]); setNewTopic("");
@@ -69,12 +80,12 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
           </div>
           <div>
             <Label htmlFor="create-authors">Авторы (через запятую)</Label>
-            <Input id="create-authors" value={authors} onChange={(e) => setAuthors(e.target.value)} />
+            <ComboboxInput id="create-authors" value={authors} onChange={setAuthors} suggestions={authorSuggestions} placeholder="Начните вводить имя автора…" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="create-journal">Журнал</Label>
-              <Input id="create-journal" value={journal} onChange={(e) => setJournal(e.target.value)} />
+              <ComboboxInput id="create-journal" value={journal} onChange={setJournal} suggestions={allJournals || []} placeholder="Начните вводить название…" />
             </div>
             <div>
               <Label htmlFor="create-year">Год</Label>
@@ -106,10 +117,11 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
               ))}
             </div>
             <div className="flex gap-2">
-              <Input
-                placeholder="Добавить ключевое слово…"
+              <ComboboxInput
                 value={newTopic}
-                onChange={(e) => setNewTopic(e.target.value)}
+                onChange={setNewTopic}
+                suggestions={(allTopics || []).filter((t) => !topics.includes(t))}
+                placeholder="Добавить ключевое слово…"
                 onKeyDown={handleTopicKeyDown}
               />
               <Button type="button" variant="outline" size="sm" onClick={handleAddTopic} disabled={!newTopic.trim()}>
