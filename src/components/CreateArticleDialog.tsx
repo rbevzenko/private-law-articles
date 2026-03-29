@@ -117,11 +117,11 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
               ))}
             </div>
             <div className="flex gap-2">
-              <Input
-                placeholder="Добавить ключевое слово…"
+              <ComboboxInput
                 value={newTopic}
-                onChange={(e) => setNewTopic(e.target.value)}
-                onKeyDown={handleTopicKeyDown}
+                onChange={setNewTopic}
+                suggestions={(allTopics || []).filter((t) => !topics.includes(t))}
+                placeholder="Добавить ключевое слово…"
               />
               <Button type="button" variant="outline" size="sm" onClick={handleAddTopic} disabled={!newTopic.trim()}>
                 +
