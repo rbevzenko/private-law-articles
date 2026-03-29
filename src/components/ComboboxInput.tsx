@@ -5,6 +5,7 @@ interface ComboboxInputProps {
   value: string;
   onChange: (value: string) => void;
   suggestions: string[];
+  onKeyDown?: (e: React.KeyboardEvent) => void;
   placeholder?: string;
   id?: string;
 }
