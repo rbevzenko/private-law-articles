@@ -20,6 +20,9 @@ interface FilterPanelProps {
   issues?: string[];
   selectedIssue?: string;
   onIssueChange?: (issue: string) => void;
+  authors?: string[];
+  selectedAuthor?: string;
+  onAuthorChange?: (author: string) => void;
 }
 
 const FilterPanel = ({
@@ -35,8 +38,11 @@ const FilterPanel = ({
   issues,
   selectedIssue = "all",
   onIssueChange,
+  authors,
+  selectedAuthor = "all",
+  onAuthorChange,
 }: FilterPanelProps) => {
-  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all" || selectedIssue !== "all";
+  const hasFilters = selectedTopic !== "all" || selectedYear !== "all" || selectedJournal !== "all" || selectedIssue !== "all" || selectedAuthor !== "all";
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -84,6 +90,22 @@ const FilterPanel = ({
         </SelectContent>
       </Select>
 
+      {authors && authors.length > 0 && onAuthorChange && (
+        <Select value={selectedAuthor} onValueChange={onAuthorChange}>
+          <SelectTrigger className="h-9 w-[260px] font-body text-sm bg-card">
+            <SelectValue placeholder="Все авторы" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] overflow-y-auto">
+            <SelectItem value="all">Все авторы</SelectItem>
+            {authors.map((a) => (
+              <SelectItem key={a} value={a}>
+                {a}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
       {issues && issues.length > 0 && onIssueChange && (
         <Select value={selectedIssue} onValueChange={onIssueChange}>
           <SelectTrigger className="h-9 w-[140px] font-body text-sm bg-card">
@@ -106,6 +128,7 @@ const FilterPanel = ({
             onTopicChange("all");
             onYearChange("all");
             onJournalChange?.("all");
+            onAuthorChange?.("all");
             onIssueChange?.("all");
           }}
           className="font-body text-sm text-accent hover:text-accent/80 transition-colors active:scale-95"

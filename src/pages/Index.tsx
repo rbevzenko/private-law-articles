@@ -18,6 +18,7 @@ const Index = () => {
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
   const [issue, setIssue] = useState("all");
+  const [author, setAuthor] = useState("all");
   const [page, setPage] = useState(1);
 
   const { data: dbArticles, isLoading } = useArticles();
@@ -55,6 +56,11 @@ const Index = () => {
     [allArticles]
   );
 
+  const authors = useMemo(
+    () => [...new Set(allArticles.flatMap((a) => a.authors).filter((a) => a && a !== "Автор не указан"))].sort(),
+    [allArticles]
+  );
+
   const issues = useMemo(() => {
     const relevant = allArticles.filter((a) => {
       if (journal !== "all" && a.journal !== journal) return false;
@@ -75,6 +81,7 @@ const Index = () => {
       if (year !== "all" && a.year !== Number(year)) return false;
       if (journal !== "all" && a.journal !== journal) return false;
       if (issue !== "all" && a.issue !== issue) return false;
+      if (author !== "all" && !a.authors.includes(author)) return false;
       if (
         q &&
         !a.title.toLowerCase().includes(q) &&
@@ -84,13 +91,14 @@ const Index = () => {
         return false;
       return true;
     });
-  }, [search, topic, year, journal, issue, allArticles]);
+  }, [search, topic, year, journal, issue, author, allArticles]);
 
   // Reset page when filters change
   const handleTopicChange = useCallback((v: string) => { setTopic(v); setPage(1); }, []);
   const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
   const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
   const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
+  const handleAuthorChange = useCallback((v: string) => { setAuthor(v); setPage(1); }, []);
   const handleYearChangeWithIssueReset = useCallback((v: string) => { setYear(v); setIssue("all"); setPage(1); }, []);
   const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
 
@@ -175,6 +183,9 @@ const Index = () => {
             issues={issues}
             selectedIssue={issue}
             onIssueChange={handleIssueChange}
+            authors={authors}
+            selectedAuthor={author}
+            onAuthorChange={handleAuthorChange}
           />
         </div>
       </section>
