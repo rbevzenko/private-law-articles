@@ -94,7 +94,7 @@ const Index = () => {
   }, [search, selectedTopics, year, journal, issue, author, allArticles]);
 
   // Reset page when filters change
-  const handleTopicsChange = useCallback((v: string[]) => { setTopics(v); setPage(1); }, []);
+  const handleTopicsChange = useCallback((v: string[]) => { setSelectedTopics(v); setPage(1); }, []);
   const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
   const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
   const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
