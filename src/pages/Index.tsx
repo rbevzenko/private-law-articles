@@ -14,7 +14,7 @@ const PAGE_SIZE = 50;
 
 const Index = () => {
   const [search, setSearch] = useState("");
-  const [topics, setTopics] = useState<string[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
   const [issue, setIssue] = useState("all");
