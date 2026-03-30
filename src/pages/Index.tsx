@@ -14,7 +14,7 @@ const PAGE_SIZE = 50;
 
 const Index = () => {
   const [search, setSearch] = useState("");
-  const [topics, setTopics] = useState<string[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [year, setYear] = useState("all");
   const [journal, setJournal] = useState("all");
   const [issue, setIssue] = useState("all");
@@ -41,7 +41,7 @@ const Index = () => {
     return staticArticles;
   }, [dbArticles]);
 
-  const topics = useMemo(
+  const allTopics = useMemo(
     () => dbTopics && dbTopics.length > 0 ? dbTopics : [...TOPICS],
     [dbTopics]
   );
@@ -77,7 +77,7 @@ const Index = () => {
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return allArticles.filter((a) => {
-      if (topics.length > 0 && !topics.some((t) => a.topics.includes(t))) return false;
+      if (selectedTopics.length > 0 && !selectedTopics.some((t) => a.topics.includes(t))) return false;
       if (year !== "all" && a.year !== Number(year)) return false;
       if (journal !== "all" && a.journal !== journal) return false;
       if (issue !== "all" && a.issue !== issue) return false;
@@ -91,10 +91,10 @@ const Index = () => {
         return false;
       return true;
     });
-  }, [search, topic, year, journal, issue, author, allArticles]);
+  }, [search, selectedTopics, year, journal, issue, author, allArticles]);
 
   // Reset page when filters change
-  const handleTopicsChange = useCallback((v: string[]) => { setTopics(v); setPage(1); }, []);
+  const handleTopicsChange = useCallback((v: string[]) => { setSelectedTopics(v); setPage(1); }, []);
   const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
   const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
   const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
@@ -171,12 +171,12 @@ const Index = () => {
         >
           <SearchBar value={search} onChange={handleSearchChange} />
           <FilterPanel
-            selectedTopics={topics}
+            selectedTopics={selectedTopics}
             onTopicsChange={handleTopicsChange}
             selectedYear={year}
             onYearChange={handleYearChangeWithIssueReset}
             years={years}
-            topics={topics}
+            topics={allTopics}
             journals={journals}
             selectedJournal={journal}
             onJournalChange={handleJournalChange}
