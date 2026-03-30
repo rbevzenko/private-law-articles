@@ -77,7 +77,7 @@ const Index = () => {
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return allArticles.filter((a) => {
-      if (topics.length > 0 && !topics.some((t) => a.topics.includes(t))) return false;
+      if (selectedTopics.length > 0 && !selectedTopics.some((t) => a.topics.includes(t))) return false;
       if (year !== "all" && a.year !== Number(year)) return false;
       if (journal !== "all" && a.journal !== journal) return false;
       if (issue !== "all" && a.issue !== issue) return false;
