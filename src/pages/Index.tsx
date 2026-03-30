@@ -171,12 +171,12 @@ const Index = () => {
         >
           <SearchBar value={search} onChange={handleSearchChange} />
           <FilterPanel
-            selectedTopics={topics}
+            selectedTopics={selectedTopics}
             onTopicsChange={handleTopicsChange}
             selectedYear={year}
             onYearChange={handleYearChangeWithIssueReset}
             years={years}
-            topics={topics}
+            topics={allTopics}
             journals={journals}
             selectedJournal={journal}
             onJournalChange={handleJournalChange}
