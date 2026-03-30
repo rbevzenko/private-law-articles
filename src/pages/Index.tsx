@@ -41,7 +41,7 @@ const Index = () => {
     return staticArticles;
   }, [dbArticles]);
 
-  const topics = useMemo(
+  const allTopics = useMemo(
     () => dbTopics && dbTopics.length > 0 ? dbTopics : [...TOPICS],
     [dbTopics]
   );
