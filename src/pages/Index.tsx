@@ -27,12 +27,17 @@ const Index = () => {
 
   // Merge DB articles with static ones, preferring DB
   const allArticles: Article[] = useMemo(() => {
+    const normalizeJournal = (j: string) =>
+      j === "Практика разрешения коммерческих споров"
+        ? "Практика рассмотрения коммерческих споров"
+        : j;
+
     if (dbArticles && dbArticles.length > 0) {
       return dbArticles.map((a) => ({
         id: a.id,
         title: a.title,
         authors: a.authors,
-        journal: a.journal,
+        journal: normalizeJournal(a.journal),
         year: a.year,
         issue: a.issue || undefined,
         topics: a.topics,
