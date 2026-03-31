@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUpdateArticle, UpdateArticleInput } from "@/hooks/useArticleMutations";
+import { useArticles, useArticleTopics, useArticleJournals } from "@/hooks/useArticles";
+import ComboboxInput from "@/components/ComboboxInput";
 import type { Article } from "@/data/articles";
 
 interface Props {
@@ -38,6 +39,16 @@ const EditArticleDialog = ({ article, open, onOpenChange }: Props) => {
   }, [open, article]);
 
   const update = useUpdateArticle();
+  const { data: allArticles } = useArticles();
+  const { data: allTopics } = useArticleTopics();
+  const { data: allJournals } = useArticleJournals();
+
+  const authorSuggestions = useMemo(() => {
+    if (!allArticles) return [];
+    const set = new Set<string>();
+    allArticles.forEach((a) => a.authors.forEach((au) => { if (au && au !== "Автор не указан") set.add(au); }));
+    return Array.from(set).sort();
+  }, [allArticles]);
 
   const handleAddTopic = () => {
     const t = newTopic.trim();
@@ -84,12 +95,12 @@ const EditArticleDialog = ({ article, open, onOpenChange }: Props) => {
           </div>
           <div>
             <Label htmlFor="edit-authors">Авторы (через запятую)</Label>
-            <Input id="edit-authors" value={authors} onChange={(e) => setAuthors(e.target.value)} />
+            <ComboboxInput id="edit-authors" value={authors} onChange={setAuthors} suggestions={authorSuggestions} placeholder="Начните вводить имя автора…" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="edit-journal">Журнал</Label>
-              <Input id="edit-journal" value={journal} onChange={(e) => setJournal(e.target.value)} />
+              <ComboboxInput id="edit-journal" value={journal} onChange={setJournal} suggestions={allJournals || []} placeholder="Начните вводить название…" />
             </div>
             <div>
               <Label htmlFor="edit-year">Год</Label>
@@ -117,11 +128,11 @@ const EditArticleDialog = ({ article, open, onOpenChange }: Props) => {
               ))}
             </div>
             <div className="flex gap-2">
-              <Input
-                id="edit-new-topic"
-                placeholder="Добавить ключевое слово…"
+              <ComboboxInput
                 value={newTopic}
-                onChange={(e) => setNewTopic(e.target.value)}
+                onChange={setNewTopic}
+                suggestions={(allTopics || []).filter((t) => !topics.includes(t))}
+                placeholder="Добавить ключевое слово…"
                 onKeyDown={handleTopicKeyDown}
               />
               <Button type="button" variant="outline" size="sm" onClick={handleAddTopic} disabled={!newTopic.trim()}>
