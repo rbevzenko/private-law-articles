@@ -153,11 +153,11 @@ const Index = () => {
 
       {/* Hero */}
       <section className="container mx-auto px-4 pt-12 pb-8 sm:px-8 sm:pt-16 sm:pb-10">
-        <div className="animate-fade-up max-w-2xl">
-          <h2 className="text-balance text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-            Библиографический каталог научных публикаций по частному праву
+        <div className="animate-fade-up max-w-3xl">
+          <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+            Библиографический каталог научных публикаций по&nbsp;частному праву
           </h2>
-          <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed max-w-xl">
+          <p className="mt-2 font-body text-base text-muted-foreground leading-relaxed sm:text-lg">
             Систематизированное собрание научных публикаций по&nbsp;основным институтам частного права в&nbsp;периодических изданиях, составленное Романом Бевзенко
           </p>
         </div>
