@@ -95,10 +95,10 @@ const FilterPanel = ({
       {journals && journals.length > 1 && onJournalChange && (
         <Select value={selectedJournal} onValueChange={onJournalChange}>
           <SelectTrigger className="h-9 w-[260px] font-body text-sm bg-card">
-            <SelectValue placeholder="Все журналы" />
+            <SelectValue placeholder="Все издания" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все журналы</SelectItem>
+            <SelectItem value="all">Все издания</SelectItem>
             {journals.map((j) => (
               <SelectItem key={j} value={j}>
                 {j}

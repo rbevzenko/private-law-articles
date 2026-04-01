@@ -99,7 +99,7 @@ const EditArticleDialog = ({ article, open, onOpenChange }: Props) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="edit-journal">Журнал</Label>
+              <Label htmlFor="edit-journal">Издание</Label>
               <ComboboxInput id="edit-journal" value={journal} onChange={setJournal} suggestions={allJournals || []} placeholder="Начните вводить название…" />
             </div>
             <div>
