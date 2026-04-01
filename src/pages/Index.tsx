@@ -25,7 +25,7 @@ const Index = () => {
   const { data: dbTopics } = useArticleTopics();
   const { user, signOut } = useAuth();
 
-  // Merge DB articles with static ones, preferring DB
+  // Use DB articles when available, otherwise fallback to the bundled catalog.
   const allArticles: Article[] = useMemo(() => {
     const normalizeJournal = (j: string) =>
       j === "Практика разрешения коммерческих споров"
@@ -43,13 +43,22 @@ const Index = () => {
         topics: a.topics,
       }));
     }
+
     return staticArticles;
   }, [dbArticles]);
 
   const allTopics = useMemo(
-    () => dbTopics && dbTopics.length > 0 ? dbTopics : [...TOPICS],
+    () => (dbTopics && dbTopics.length > 0 ? dbTopics : [...TOPICS]),
     [dbTopics]
   );
+
+  const isUsingFallbackCatalog =
+    !isLoading &&
+    isError &&
+    (!dbArticles || dbArticles.length === 0) &&
+    staticArticles.length > 0;
+
+  const showFatalCatalogError = isError && !isUsingFallbackCatalog;
 
   const journals = useMemo(
     () => [...new Set(allArticles.map((a) => a.journal))].sort(),
@@ -203,19 +212,28 @@ const Index = () => {
               Загрузка каталога...
             </p>
           </div>
-        ) : isError ? (
+        ) : showFatalCatalogError ? (
           <div className="py-16 text-center space-y-2">
             <p className="font-body text-destructive font-medium">Ошибка загрузки каталога</p>
             <p className="font-body text-sm text-muted-foreground">{(error as Error)?.message || "Неизвестная ошибка"}</p>
-            <button
+            <Button
+              variant="outline"
+              className="mt-4"
               onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 rounded-md border border-border text-sm hover:bg-accent transition-colors"
             >
               Попробовать снова
-            </button>
+            </Button>
           </div>
         ) : (
           <>
+            {isUsingFallbackCatalog && (
+              <div className="mb-4 rounded-md border border-border bg-card px-4 py-3">
+                <p className="font-body text-sm text-muted-foreground">
+                  База временно недоступна — показана резервная версия каталога. Некоторые новые записи могут отсутствовать.
+                </p>
+              </div>
+            )}
+
             <div className="mb-4 flex items-center justify-between">
               <p className="font-body text-sm text-muted-foreground">
                 {filtered.length}{" "}
