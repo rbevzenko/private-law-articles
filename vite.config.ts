@@ -47,19 +47,7 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,svg,png,woff2}"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/jkmcgpzrzpmkgcqutbzy\.supabase\.co\/rest\/v1\/articles/,
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "articles-cache",
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24, // 24 часа
-              },
-            },
-          },
-        ],
+        navigateFallback: null,
       },
     }),
   ].filter(Boolean),
