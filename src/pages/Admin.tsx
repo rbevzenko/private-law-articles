@@ -95,7 +95,7 @@ const Admin = () => {
             <div>
               <h2 className="text-2xl font-bold tracking-tight mb-2">Управление статьями</h2>
               <p className="text-muted-foreground font-body">
-                Сканируйте журналы или добавьте статью вручную.
+                Сканируйте издания или добавьте статью вручную.
               </p>
             </div>
             <Button onClick={() => setCreateOpen(true)} className="shrink-0">
