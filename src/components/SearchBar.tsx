@@ -13,7 +13,7 @@ const SearchBar = ({ value, onChange }: SearchBarProps) => {
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Поиск по названию, автору, журналу…"
+        placeholder="Поиск по названию, автору, изданию…"
         className="h-11 pl-10 font-body text-sm bg-card"
       />
     </div>
