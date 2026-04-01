@@ -35,8 +35,15 @@ export function useUpdateArticle() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...data }: UpdateArticleInput) => {
-      const { error } = await supabase.from("articles").update(data).eq("id", id);
+      const { data: updated, error } = await supabase
+        .from("articles")
+        .update(data)
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!updated || updated.length === 0) {
+        throw new Error("Нет прав для редактирования. Войдите как администратор.");
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["articles"] });
