@@ -19,30 +19,36 @@ const PAGE_SIZE = 1000;
 const STALE_TIME = 5 * 60 * 1000; // 5 минут
 
 async function fetchAllArticles(): Promise<DbArticle[]> {
-  // Сначала узнаём общее количество
-  const { count, error: countError } = await supabase
+  // Загружаем первую страницу
+  const { data: firstPage, error: firstError } = await supabase
     .from("articles")
-    .select("*", { count: "exact", head: true });
-  if (countError) throw countError;
+    .select("*")
+    .order("year", { ascending: false })
+    .order("title")
+    .range(0, PAGE_SIZE - 1);
 
-  const total = count || 0;
-  const pages = Math.ceil(total / PAGE_SIZE);
+  if (firstError) throw firstError;
+  if (!firstPage || firstPage.length < PAGE_SIZE) return (firstPage || []) as DbArticle[];
 
-  // Загружаем все страницы параллельно
-  const fetches = Array.from({ length: pages }, (_, i) =>
-    supabase
-      .from("articles")
-      .select("*")
-      .order("year", { ascending: false })
-      .order("title")
-      .range(i * PAGE_SIZE, (i + 1) * PAGE_SIZE - 1)
+  // Если первая страница полная — параллельно загружаем остальные (макс. 19 страниц = 20 000 статей)
+  const MAX_EXTRA_PAGES = 19;
+  const results = await Promise.all(
+    Array.from({ length: MAX_EXTRA_PAGES }, (_, i) =>
+      supabase
+        .from("articles")
+        .select("*")
+        .order("year", { ascending: false })
+        .order("title")
+        .range((i + 1) * PAGE_SIZE, (i + 2) * PAGE_SIZE - 1)
+    )
   );
 
-  const results = await Promise.all(fetches);
-  const allData: DbArticle[] = [];
+  const allData: DbArticle[] = [...(firstPage as DbArticle[])];
   for (const { data, error } of results) {
     if (error) throw error;
+    if (!data || data.length === 0) break;
     allData.push(...(data as DbArticle[]));
+    if (data.length < PAGE_SIZE) break;
   }
   return allData;
 }
