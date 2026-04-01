@@ -260,7 +260,7 @@ const Index = () => {
                   ))}
                 </div>
                 {totalPages > 1 && (
-                  <div className="mt-8 flex items-center justify-center gap-2">
+                  <div className="mt-8 flex items-center justify-center flex-wrap gap-1">
                     <button
                       onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                       disabled={safePage <= 1}
@@ -268,9 +268,35 @@ const Index = () => {
                     >
                       ← Назад
                     </button>
-                    <span className="font-body text-sm text-muted-foreground px-3">
-                      {safePage} / {totalPages}
-                    </span>
+                    {(() => {
+                      const pages: (number | "...")[] = [];
+                      if (totalPages <= 7) {
+                        for (let i = 1; i <= totalPages; i++) pages.push(i);
+                      } else {
+                        pages.push(1);
+                        if (safePage > 3) pages.push("...");
+                        for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
+                        if (safePage < totalPages - 2) pages.push("...");
+                        pages.push(totalPages);
+                      }
+                      return pages.map((p, i) =>
+                        p === "..." ? (
+                          <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-sm text-muted-foreground">…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                            className={`min-w-[36px] px-2 py-1.5 rounded-md border text-sm transition-colors ${
+                              p === safePage
+                                ? "border-primary bg-primary text-primary-foreground font-medium"
+                                : "border-border text-muted-foreground hover:text-foreground hover:bg-accent"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        )
+                      );
+                    })()}
                     <button
                       onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                       disabled={safePage >= totalPages}
