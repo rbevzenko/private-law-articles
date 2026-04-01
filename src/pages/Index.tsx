@@ -21,7 +21,7 @@ const Index = () => {
   const [author, setAuthor] = useState("all");
   const [page, setPage] = useState(1);
 
-  const { data: dbArticles, isLoading } = useArticles();
+  const { data: dbArticles, isLoading, isError, error } = useArticles();
   const { data: dbTopics } = useArticleTopics();
   const { user, signOut } = useAuth();
 
@@ -202,6 +202,17 @@ const Index = () => {
             <p className="font-body text-muted-foreground animate-pulse">
               Загрузка каталога...
             </p>
+          </div>
+        ) : isError ? (
+          <div className="py-16 text-center space-y-2">
+            <p className="font-body text-destructive font-medium">Ошибка загрузки каталога</p>
+            <p className="font-body text-sm text-muted-foreground">{(error as Error)?.message || "Неизвестная ошибка"}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 rounded-md border border-border text-sm hover:bg-accent transition-colors"
+            >
+              Попробовать снова
+            </button>
           </div>
         ) : (
           <>
