@@ -18,16 +18,30 @@ export interface DbArticle {
 const PAGE_SIZE = 1000;
 const STALE_TIME = 5 * 60 * 1000; // 5 минут
 
+const FETCH_TIMEOUT = 10_000; // 10 секунд макс на запрос
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout: база данных не отвечает")), ms)
+    ),
+  ]);
+}
+
 async function fetchAllArticles(): Promise<DbArticle[]> {
   let allData: DbArticle[] = [];
   let from = 0;
   while (true) {
-    const { data, error } = await supabase
-      .from("articles")
-      .select("*")
-      .order("year", { ascending: false })
-      .order("title")
-      .range(from, from + PAGE_SIZE - 1);
+    const { data, error } = await withTimeout(
+      supabase
+        .from("articles")
+        .select("*")
+        .order("year", { ascending: false })
+        .order("title")
+        .range(from, from + PAGE_SIZE - 1),
+      FETCH_TIMEOUT
+    );
     if (error) throw error;
     if (!data || data.length === 0) break;
     allData = allData.concat(data as DbArticle[]);
