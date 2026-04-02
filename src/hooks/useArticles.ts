@@ -17,24 +17,33 @@ export interface DbArticle {
 
 const PAGE_SIZE = 1000;
 const STALE_TIME = 5 * 60 * 1000; // 5 минут
+const FETCH_TIMEOUT = 10_000; // 10 секунд
 
 async function fetchAllArticles(): Promise<DbArticle[]> {
-  let allData: DbArticle[] = [];
-  let from = 0;
-  while (true) {
-    const { data, error } = await supabase
-      .from("articles")
-      .select("*")
-      .order("year", { ascending: false })
-      .order("title")
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) throw error;
-    if (!data || data.length === 0) break;
-    allData = allData.concat(data as DbArticle[]);
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
+  try {
+    let allData: DbArticle[] = [];
+    let from = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from("articles")
+        .select("*")
+        .order("year", { ascending: false })
+        .order("title")
+        .range(from, from + PAGE_SIZE - 1)
+        .abortSignal(controller.signal);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allData = allData.concat(data as DbArticle[]);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    return allData;
+  } finally {
+    clearTimeout(timer);
   }
-  return allData;
 }
 
 export function useArticles() {
@@ -42,7 +51,7 @@ export function useArticles() {
     queryKey: ["articles"],
     queryFn: fetchAllArticles,
     staleTime: STALE_TIME,
-    retry: 1,
+    retry: 0,
   });
 }
 
@@ -52,7 +61,7 @@ export function useArticleTopics() {
     queryKey: ["articles"],
     queryFn: fetchAllArticles,
     staleTime: STALE_TIME,
-    retry: 1,
+    retry: 0,
     select: (articles: DbArticle[]) => {
       const topics = new Set<string>();
       articles.forEach((a) => (a.topics || []).forEach((t) => topics.add(t)));
@@ -67,7 +76,7 @@ export function useArticleJournals() {
     queryKey: ["articles"],
     queryFn: fetchAllArticles,
     staleTime: STALE_TIME,
-    retry: 1,
+    retry: 0,
     select: (articles: DbArticle[]) => {
       const journals = new Set<string>();
       articles.forEach((a) => journals.add(a.journal));
