@@ -7,7 +7,6 @@ import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
-import { Button } from "@/components/ui/button";
 import type { Article } from "@/data/articles";
 
 const PAGE_SIZE = 50;
@@ -21,11 +20,11 @@ const Index = () => {
   const [author, setAuthor] = useState("all");
   const [page, setPage] = useState(1);
 
-  const { data: dbArticles, isLoading, isError, error } = useArticles();
+  const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
   const { user, signOut } = useAuth();
 
-  // Always start with static articles, upgrade to DB when available
+  // Always show static articles immediately; upgrade to DB when available
   const allArticles: Article[] = useMemo(() => {
     const normalizeJournal = (j: string) =>
       j === "Практика разрешения коммерческих споров"
@@ -104,7 +103,6 @@ const Index = () => {
 
   // Reset page when filters change
   const handleTopicsChange = useCallback((v: string[]) => { setSelectedTopics(v); setPage(1); }, []);
-  const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
   const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
   const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
   const handleAuthorChange = useCallback((v: string) => { setAuthor(v); setPage(1); }, []);
@@ -137,15 +135,13 @@ const Index = () => {
                 >
                   <Settings className="h-5 w-5" />
                 </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
                   onClick={signOut}
                   title="Выйти"
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground transition-colors p-2"
                 >
                   <LogOut className="h-5 w-5" />
-                </Button>
+                </button>
               </>
             ) : (
               <Link
@@ -201,118 +197,117 @@ const Index = () => {
 
       {/* Results */}
       <section className="container mx-auto px-4 sm:px-8 pb-16">
-        {isLoading && isUsingFallback ? null : null}
-          <>
-            {showFallbackBanner && (
-              <div className="mb-4 rounded-md border border-border bg-card px-4 py-3">
-                <p className="font-body text-sm text-muted-foreground">
-                  База временно недоступна — показана резервная версия каталога. Некоторые новые записи могут отсутствовать.
-                </p>
-              </div>
+        {showFallbackBanner && (
+          <div className="mb-4 rounded-md border border-border bg-card px-4 py-3">
+            <p className="font-body text-sm text-muted-foreground">
+              База временно недоступна — показана резервная версия каталога. Некоторые новые записи могут отсутствовать.
+            </p>
+          </div>
+        )}
+
+        <div className="mb-4 flex items-center justify-between">
+          <p className="font-body text-sm text-muted-foreground">
+            {filtered.length}{" "}
+            {filtered.length === 1
+              ? "публикация"
+              : filtered.length < 5
+              ? "публикации"
+              : "публикаций"}
+            {isLoading && isUsingFallback && (
+              <span className="ml-2 animate-pulse">· загрузка из базы…</span>
             )}
-
-            <div className="mb-4 flex items-center justify-between">
-              <p className="font-body text-sm text-muted-foreground">
-                {filtered.length}{" "}
-                {filtered.length === 1
-                  ? "публикация"
-                  : filtered.length < 5
-                  ? "публикации"
-                  : "публикаций"}
-                {totalPages > 1 && (
-                  <span className="ml-2">
-                    · стр. {safePage} из {totalPages}
-                  </span>
-                )}
-              </p>
-              {totalPages > 1 && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    disabled={safePage <= 1}
-                    className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Предыдущая страница"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    disabled={safePage >= totalPages}
-                    className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Следующая страница"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
+            {totalPages > 1 && (
+              <span className="ml-2">
+                · стр. {safePage} из {totalPages}
+              </span>
+            )}
+          </p>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                disabled={safePage <= 1}
+                className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                aria-label="Предыдущая страница"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                disabled={safePage >= totalPages}
+                className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                aria-label="Следующая страница"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
+          )}
+        </div>
 
-            {filtered.length === 0 ? (
-              <div className="py-16 text-center animate-fade-in">
-                <p className="font-body text-muted-foreground">
-                  Ничего не найдено. Попробуйте изменить критерии поиска.
-                </p>
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center animate-fade-in">
+            <p className="font-body text-muted-foreground">
+              Ничего не найдено. Попробуйте изменить критерии поиска.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-2">
+              {paginatedArticles.map((article, i) => (
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  canEdit={!!user}
+                  style={{ animationDelay: `${Math.min(80 + i * 20, 400)}ms` }}
+                />
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center flex-wrap gap-1">
+                <button
+                  onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  disabled={safePage <= 1}
+                  className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  ← Назад
+                </button>
+                {(() => {
+                  const pages: (number | "...")[] = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    if (safePage > 3) pages.push("...");
+                    for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
+                    if (safePage < totalPages - 2) pages.push("...");
+                    pages.push(totalPages);
+                  }
+                  return pages.map((p, i) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-sm text-muted-foreground">…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        className={`min-w-[36px] px-2 py-1.5 rounded-md border text-sm transition-colors ${
+                          p === safePage
+                            ? "border-primary bg-primary text-primary-foreground font-medium"
+                            : "border-border text-muted-foreground hover:text-foreground hover:bg-accent"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  );
+                })()}
+                <button
+                  onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  disabled={safePage >= totalPages}
+                  className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  Вперёд →
+                </button>
               </div>
-            ) : (
-              <>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {paginatedArticles.map((article, i) => (
-                    <ArticleCard
-                      key={article.id}
-                      article={article}
-                      canEdit={!!user}
-                      style={{ animationDelay: `${Math.min(80 + i * 20, 400)}ms` }}
-                    />
-                  ))}
-                </div>
-                {totalPages > 1 && (
-                  <div className="mt-8 flex items-center justify-center flex-wrap gap-1">
-                    <button
-                      onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      disabled={safePage <= 1}
-                      className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                      ← Назад
-                    </button>
-                    {(() => {
-                      const pages: (number | "...")[] = [];
-                      if (totalPages <= 7) {
-                        for (let i = 1; i <= totalPages; i++) pages.push(i);
-                      } else {
-                        pages.push(1);
-                        if (safePage > 3) pages.push("...");
-                        for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
-                        if (safePage < totalPages - 2) pages.push("...");
-                        pages.push(totalPages);
-                      }
-                      return pages.map((p, i) =>
-                        p === "..." ? (
-                          <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-sm text-muted-foreground">…</span>
-                        ) : (
-                          <button
-                            key={p}
-                            onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                            className={`min-w-[36px] px-2 py-1.5 rounded-md border text-sm transition-colors ${
-                              p === safePage
-                                ? "border-primary bg-primary text-primary-foreground font-medium"
-                                : "border-border text-muted-foreground hover:text-foreground hover:bg-accent"
-                            }`}
-                          >
-                            {p}
-                          </button>
-                        )
-                      );
-                    })()}
-                    <button
-                      onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      disabled={safePage >= totalPages}
-                      className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Вперёд →
-                    </button>
-                  </div>
-                )}
-              </>
             )}
           </>
         )}
