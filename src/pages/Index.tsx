@@ -38,8 +38,12 @@ const Index = () => {
         authors: a.authors,
         journal: normalizeJournal(a.journal),
         year: a.year,
-        issue: a.issue || undefined,
+        issue: a.issue ?? null,
+        section: a.section ?? null,
         topics: a.topics,
+        url: a.url ?? null,
+        source_url: a.source_url ?? null,
+        created_at: a.created_at,
       }));
     }
 

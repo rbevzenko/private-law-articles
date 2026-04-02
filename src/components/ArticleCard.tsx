@@ -105,9 +105,9 @@ const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
           {citation}
         </p>
 
-        {article.abstract && (
+        {article.section && (
           <p className="font-body text-sm leading-relaxed text-muted-foreground line-clamp-3">
-            {article.abstract}
+            {article.section}
           </p>
         )}
       </article>
