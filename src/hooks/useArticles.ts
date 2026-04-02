@@ -33,13 +33,14 @@ async function fetchAllArticles(): Promise<DbArticle[]> {
   let allData: DbArticle[] = [];
   let from = 0;
   while (true) {
+    const query = supabase
+      .from("articles")
+      .select("*")
+      .order("year", { ascending: false })
+      .order("title")
+      .range(from, from + PAGE_SIZE - 1);
     const { data, error } = await withTimeout(
-      supabase
-        .from("articles")
-        .select("*")
-        .order("year", { ascending: false })
-        .order("title")
-        .range(from, from + PAGE_SIZE - 1),
+      query.then((res) => res),
       FETCH_TIMEOUT
     );
     if (error) throw error;
