@@ -1,4 +1,4 @@
-import type { DbArticle } from "@/hooks/useArticles";
+
 
 export interface Article {
   id: string;
