@@ -46,9 +46,7 @@ const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
   const citation = [
     article.journal,
     article.year,
-    article.volume && `Т. ${article.volume}`,
     article.issue && formatIssue(article.issue),
-    article.pages && `С. ${article.pages}`,
   ]
     .filter(Boolean)
     .join(". ");
