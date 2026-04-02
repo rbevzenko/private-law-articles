@@ -40,7 +40,7 @@ async function fetchAllArticles(): Promise<DbArticle[]> {
       .order("title")
       .range(from, from + PAGE_SIZE - 1);
     const { data, error } = await withTimeout(
-      query.then((res) => res),
+      Promise.resolve(query),
       FETCH_TIMEOUT
     );
     if (error) throw error;
