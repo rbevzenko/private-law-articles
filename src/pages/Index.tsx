@@ -25,7 +25,7 @@ const Index = () => {
   const { data: dbTopics } = useArticleTopics();
   const { user, signOut } = useAuth();
 
-  // Use DB articles when available, otherwise fallback to the bundled catalog.
+  // Always start with static articles, upgrade to DB when available
   const allArticles: Article[] = useMemo(() => {
     const normalizeJournal = (j: string) =>
       j === "Практика разрешения коммерческих споров"
@@ -52,13 +52,8 @@ const Index = () => {
     [dbTopics]
   );
 
-  const isUsingFallbackCatalog =
-    !isLoading &&
-    isError &&
-    (!dbArticles || dbArticles.length === 0) &&
-    staticArticles.length > 0;
-
-  const showFatalCatalogError = isError && !isUsingFallbackCatalog;
+  const isUsingFallback = !dbArticles || dbArticles.length === 0;
+  const showFallbackBanner = !isLoading && isError && isUsingFallback;
 
   const journals = useMemo(
     () => [...new Set(allArticles.map((a) => a.journal))].sort(),
