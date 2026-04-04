@@ -7,6 +7,7 @@ import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
+import BibliographyListDialog from "@/components/BibliographyListDialog";
 import type { Article } from "@/data/articles";
 
 const PAGE_SIZE = 50;
