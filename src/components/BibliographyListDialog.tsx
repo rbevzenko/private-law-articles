@@ -20,7 +20,9 @@ function formatGostCitation(a: Article): string {
   const parts: string[] = [];
   if (authors) parts.push(authors);
   
-  let citation = parts.length > 0 ? `${parts.join("")}. ${title}` : title;
+  const authorStr = parts.join("");
+  const separator = authorStr.endsWith(".") ? " " : ". ";
+  let citation = parts.length > 0 ? `${authorStr}${separator}${title}` : title;
   citation += ` // ${journal}. ${year}.`;
   if (issue) citation += ` ${issue}.`;
 
