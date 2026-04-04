@@ -7,6 +7,7 @@ import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
+import BibliographyListDialog from "@/components/BibliographyListDialog";
 import type { Article } from "@/data/articles";
 
 const PAGE_SIZE = 50;
@@ -210,22 +211,25 @@ const Index = () => {
         )}
 
         <div className="mb-4 flex items-center justify-between">
-          <p className="font-body text-sm text-muted-foreground">
-            {filtered.length}{" "}
-            {filtered.length === 1
-              ? "публикация"
-              : filtered.length < 5
-              ? "публикации"
-              : "публикаций"}
-            {isLoading && isUsingFallback && (
-              <span className="ml-2 animate-pulse">· загрузка из базы…</span>
-            )}
-            {totalPages > 1 && (
-              <span className="ml-2">
-                · стр. {safePage} из {totalPages}
-              </span>
-            )}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="font-body text-sm text-muted-foreground">
+              {filtered.length}{" "}
+              {filtered.length === 1
+                ? "публикация"
+                : filtered.length < 5
+                ? "публикации"
+                : "публикаций"}
+              {isLoading && isUsingFallback && (
+                <span className="ml-2 animate-pulse">· загрузка из базы…</span>
+              )}
+              {totalPages > 1 && (
+                <span className="ml-2">
+                  · стр. {safePage} из {totalPages}
+                </span>
+              )}
+            </p>
+            <BibliographyListDialog articles={filtered} />
+          </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button
