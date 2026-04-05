@@ -17,16 +17,18 @@ export interface DbArticle {
 
 const PAGE_SIZE = 1000;
 const STALE_TIME = 5 * 60 * 1000; // 5 минут
-const FETCH_TIMEOUT = 10_000; // 10 секунд
+const FETCH_TIMEOUT = 60_000; // 60 секунд — достаточно для больших баз
+const PER_BATCH_TIMEOUT = 15_000; // 15 секунд на один батч
 
 async function fetchAllArticles(): Promise<DbArticle[]> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  let allData: DbArticle[] = [];
+  let from = 0;
 
-  try {
-    let allData: DbArticle[] = [];
-    let from = 0;
-    while (true) {
+  while (true) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PER_BATCH_TIMEOUT);
+
+    try {
       const { data, error } = await supabase
         .from("articles")
         .select("*")
@@ -34,16 +36,26 @@ async function fetchAllArticles(): Promise<DbArticle[]> {
         .order("title")
         .range(from, from + PAGE_SIZE - 1)
         .abortSignal(controller.signal);
+
+      clearTimeout(timer);
+
       if (error) throw error;
       if (!data || data.length === 0) break;
       allData = allData.concat(data as DbArticle[]);
       if (data.length < PAGE_SIZE) break;
       from += PAGE_SIZE;
+    } catch (err) {
+      clearTimeout(timer);
+      // Если уже загрузили часть данных — вернём их, а не крашим всё
+      if (allData.length > 0) {
+        console.warn(`[useArticles] Partial load: got ${allData.length} articles, batch at ${from} failed`, err);
+        return allData;
+      }
+      throw err;
     }
-    return allData;
-  } finally {
-    clearTimeout(timer);
   }
+
+  return allData;
 }
 
 export function useArticles() {
