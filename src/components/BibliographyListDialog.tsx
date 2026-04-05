@@ -42,9 +42,9 @@ export default function BibliographyListDialog({ articles }: Props) {
     switch (sortMode) {
       case "alpha":
         return arr.sort((a, b) => {
-          const aKey = a.authors[0] !== "Автор не указан" ? a.authors[0] : a.title;
-          const bKey = b.authors[0] !== "Автор не указан" ? b.authors[0] : b.title;
-          return aKey.localeCompare(bKey, "ru");
+          const aKey = (a.authors?.[0] && a.authors[0] !== "Автор не указан") ? a.authors[0] : (a.title ?? "");
+          const bKey = (b.authors?.[0] && b.authors[0] !== "Автор не указан") ? b.authors[0] : (b.title ?? "");
+          return (aKey ?? "").localeCompare(bKey ?? "", "ru");
         });
       case "year-asc":
         return arr.sort((a, b) => a.year - b.year || a.title.localeCompare(b.title, "ru"));
