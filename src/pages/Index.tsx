@@ -80,10 +80,10 @@ const Index = () => {
       if (year !== "all" && a.year !== Number(year)) return false;
       return !!a.issue;
     });
-    return [...new Set(relevant.map((a) => a.issue!))].sort((a, b) => {
-      const na = parseInt(a), nb = parseInt(b);
+    return [...new Set(relevant.map((a) => a.issue!).filter(Boolean))].sort((a, b) => {
+      const na = parseInt(a ?? ''), nb = parseInt(b ?? '');
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      return a.localeCompare(b);
+      return (a ?? '').localeCompare(b ?? '');
     });
   }, [allArticles, journal, year]);
 
