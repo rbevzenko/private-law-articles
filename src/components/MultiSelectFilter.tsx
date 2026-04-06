@@ -87,7 +87,7 @@ const MultiSelectFilter = ({
                   <Check className="h-3 w-3 text-primary-foreground" />
                 )}
               </div>
-              <span className="truncate">{item}</span>
+              <span className="truncate" title={item}>{item}</span>
             </button>
           ))}
           {filtered.length === 0 && (
