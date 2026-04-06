@@ -13,6 +13,7 @@ interface MultiSelectFilterProps {
   placeholder: string;
   searchPlaceholder?: string;
   width?: string;
+  popoverWidth?: string;
 }
 
 const MultiSelectFilter = ({
@@ -22,6 +23,7 @@ const MultiSelectFilter = ({
   placeholder,
   searchPlaceholder = "Поиск...",
   width = "w-[220px]",
+  popoverWidth,
 }: MultiSelectFilterProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -59,7 +61,7 @@ const MultiSelectFilter = ({
           <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-1" align="start">
+      <PopoverContent className={`${popoverWidth || "w-[280px]"} p-1`} align="start">
         <div className="px-2 py-1.5">
           <input
             autoFocus
