@@ -15,17 +15,16 @@ const PAGE_SIZE = 50;
 const Index = () => {
   const [search, setSearch] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [year, setYear] = useState("all");
-  const [journal, setJournal] = useState("all");
-  const [issue, setIssue] = useState("all");
-  const [author, setAuthor] = useState("all");
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
+  const [selectedJournals, setSelectedJournals] = useState<string[]>([]);
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [page, setPage] = useState(1);
 
   const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
   const { user, signOut } = useAuth();
 
-  // Always show static articles immediately; upgrade to DB when available
   const allArticles: Article[] = useMemo(() => {
     const normalizeJournal = (j: string) =>
       j === "Практика разрешения коммерческих споров"
@@ -76,8 +75,8 @@ const Index = () => {
 
   const issues = useMemo(() => {
     const relevant = allArticles.filter((a) => {
-      if (journal !== "all" && a.journal !== journal) return false;
-      if (year !== "all" && a.year !== Number(year)) return false;
+      if (selectedJournals.length > 0 && !selectedJournals.includes(a.journal)) return false;
+      if (selectedYears.length > 0 && !selectedYears.includes(String(a.year))) return false;
       return !!a.issue;
     });
     return [...new Set(relevant.map((a) => a.issue!).filter(Boolean))].sort((a, b) => {
@@ -85,16 +84,16 @@ const Index = () => {
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
       return (a ?? '').localeCompare(b ?? '');
     });
-  }, [allArticles, journal, year]);
+  }, [allArticles, selectedJournals, selectedYears]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return allArticles.filter((a) => {
       if (selectedTopics.length > 0 && !selectedTopics.some((t) => a.topics.includes(t))) return false;
-      if (year !== "all" && a.year !== Number(year)) return false;
-      if (journal !== "all" && a.journal !== journal) return false;
-      if (issue !== "all" && a.issue !== issue) return false;
-      if (author !== "all" && !a.authors.includes(author)) return false;
+      if (selectedYears.length > 0 && !selectedYears.includes(String(a.year))) return false;
+      if (selectedJournals.length > 0 && !selectedJournals.includes(a.journal)) return false;
+      if (selectedIssues.length > 0 && (!a.issue || !selectedIssues.includes(a.issue))) return false;
+      if (selectedAuthors.length > 0 && !selectedAuthors.some((au) => a.authors.includes(au))) return false;
       if (
         q &&
         !a.title.toLowerCase().includes(q) &&
@@ -104,14 +103,13 @@ const Index = () => {
         return false;
       return true;
     });
-  }, [search, selectedTopics, year, journal, issue, author, allArticles]);
+  }, [search, selectedTopics, selectedYears, selectedJournals, selectedIssues, selectedAuthors, allArticles]);
 
-  // Reset page when filters change
   const handleTopicsChange = useCallback((v: string[]) => { setSelectedTopics(v); setPage(1); }, []);
-  const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
-  const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
-  const handleAuthorChange = useCallback((v: string) => { setAuthor(v); setPage(1); }, []);
-  const handleYearChangeWithIssueReset = useCallback((v: string) => { setYear(v); setIssue("all"); setPage(1); }, []);
+  const handleJournalsChange = useCallback((v: string[]) => { setSelectedJournals(v); setSelectedIssues([]); setPage(1); }, []);
+  const handleIssuesChange = useCallback((v: string[]) => { setSelectedIssues(v); setPage(1); }, []);
+  const handleAuthorsChange = useCallback((v: string[]) => { setSelectedAuthors(v); setPage(1); }, []);
+  const handleYearsChange = useCallback((v: string[]) => { setSelectedYears(v); setSelectedIssues([]); setPage(1); }, []);
   const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -183,19 +181,19 @@ const Index = () => {
           <FilterPanel
             selectedTopics={selectedTopics}
             onTopicsChange={handleTopicsChange}
-            selectedYear={year}
-            onYearChange={handleYearChangeWithIssueReset}
+            selectedYears={selectedYears}
+            onYearsChange={handleYearsChange}
             years={years}
             topics={allTopics}
             journals={journals}
-            selectedJournal={journal}
-            onJournalChange={handleJournalChange}
+            selectedJournals={selectedJournals}
+            onJournalsChange={handleJournalsChange}
             issues={issues}
-            selectedIssue={issue}
-            onIssueChange={handleIssueChange}
+            selectedIssues={selectedIssues}
+            onIssuesChange={handleIssuesChange}
             authors={authors}
-            selectedAuthor={author}
-            onAuthorChange={handleAuthorChange}
+            selectedAuthors={selectedAuthors}
+            onAuthorsChange={handleAuthorsChange}
           />
         </div>
       </section>
