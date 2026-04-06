@@ -13,6 +13,7 @@ interface MultiSelectFilterProps {
   placeholder: string;
   searchPlaceholder?: string;
   width?: string;
+  popoverWidth?: string;
 }
 
 const MultiSelectFilter = ({
