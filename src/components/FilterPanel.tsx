@@ -61,6 +61,7 @@ const FilterPanel = ({
           placeholder="Все издания"
           searchPlaceholder="Поиск издания..."
           width="w-[260px]"
+          popoverWidth="w-[450px]"
         />
       )}
 
