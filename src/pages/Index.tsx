@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
-import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut } from "lucide-react";
+import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search, ListFilter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
+import SkeletonCard from "@/components/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import type { Article } from "@/data/articles";
 
@@ -107,12 +108,12 @@ const Index = () => {
   const paginatedArticles = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-16 sm:pb-0">
       {/* Header */}
-      <header className="border-b border-border bg-card/60 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-4 sm:px-8">
-          <BookOpen className="h-6 w-6 text-primary shrink-0" />
-          <h1 className="text-xl font-semibold tracking-tight text-primary">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto flex items-center gap-3 px-4 py-3 sm:px-8">
+          <BookOpen className="h-5 w-5 text-primary shrink-0" />
+          <h1 className="font-headline text-lg font-semibold tracking-tight text-primary">
             Частное право
           </h1>
           <span className="hidden sm:inline font-body text-sm text-muted-foreground ml-1">
@@ -152,21 +153,21 @@ const Index = () => {
       </header>
 
       {/* Hero */}
-      <section className="container mx-auto px-4 pt-12 pb-8 sm:px-8 sm:pt-16 sm:pb-10">
+      <section className="container mx-auto px-4 pt-8 pb-6 sm:px-8 sm:pt-12 sm:pb-8">
         <div className="animate-fade-up max-w-3xl">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+          <h2 className="font-headline text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
             Библиографический каталог научных публикаций по&nbsp;частному праву
           </h2>
-          <p className="mt-2 font-body text-base text-muted-foreground leading-relaxed sm:text-lg">
-            Систематизированное собрание научных публикаций по&nbsp;основным институтам частного права в&nbsp;периодических изданиях, составленное Романом Бевзенко
+          <p className="mt-2 font-body text-sm text-muted-foreground leading-relaxed sm:text-base">
+            Систематизированный каталог научных публикаций по&nbsp;основным институтам частного права в&nbsp;периодических изданиях и&nbsp;сборниках статей, составленный Романом Бевзенко
           </p>
         </div>
       </section>
 
       {/* Search & Filters */}
-      <section className="container mx-auto px-4 sm:px-8 pb-6">
+      <section className="container mx-auto px-4 sm:px-8 pb-5">
         <div
-          className="animate-fade-up space-y-4"
+          className="animate-fade-up space-y-3"
           style={{ animationDelay: "100ms" }}
         >
           <SearchBar value={search} onChange={handleSearchChange} />
@@ -193,10 +194,10 @@ const Index = () => {
       {/* Results */}
       <section className="container mx-auto px-4 sm:px-8 pb-16">
         {isLoading ? (
-          <div className="py-16 text-center">
-            <p className="font-body text-muted-foreground animate-pulse">
-              Загрузка каталога...
-            </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
           </div>
         ) : (
           <>
@@ -244,7 +245,7 @@ const Index = () => {
               </div>
             ) : (
               <>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 md:grid-cols-2">
                   {paginatedArticles.map((article, i) => (
                     <ArticleCard
                       key={article.id}
@@ -307,14 +308,52 @@ const Index = () => {
         )}
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-6">
+      {/* Footer — desktop only */}
+      <footer className="hidden sm:block border-t border-border py-5">
         <div className="container mx-auto px-4 sm:px-8">
           <p className="font-body text-xs text-muted-foreground text-center">
             © {new Date().getFullYear()} Каталог статей по частному праву
           </p>
         </div>
       </footer>
+
+      {/* Bottom Tab Bar — mobile only */}
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-card/95 backdrop-blur-sm border-t border-border flex">
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-primary"
+          aria-label="Каталог"
+        >
+          <BookOpen className="h-5 w-5" />
+          <span className="font-body text-[10px] font-medium">Каталог</span>
+        </button>
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-muted-foreground"
+          aria-label="Поиск"
+          onClick={() => document.querySelector<HTMLInputElement>('input[placeholder]')?.focus()}
+        >
+          <Search className="h-5 w-5" />
+          <span className="font-body text-[10px]">Поиск</span>
+        </button>
+        {user ? (
+          <Link
+            to="/admin"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-muted-foreground"
+            aria-label="Управление"
+          >
+            <Settings className="h-5 w-5" />
+            <span className="font-body text-[10px]">Управление</span>
+          </Link>
+        ) : (
+          <Link
+            to="/login"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-muted-foreground"
+            aria-label="Войти"
+          >
+            <LogIn className="h-5 w-5" />
+            <span className="font-body text-[10px]">Войти</span>
+          </Link>
+        )}
+      </nav>
     </div>
   );
 };

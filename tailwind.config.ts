@@ -59,13 +59,14 @@ export default {
         },
       },
       borderRadius: {
+        DEFAULT: "var(--radius)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
-        body: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+        headline: ['"Noto Serif"', 'Georgia', 'serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {
