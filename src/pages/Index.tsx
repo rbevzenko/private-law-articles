@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
-import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut } from "lucide-react";
+import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
+import SkeletonCard from "@/components/SkeletonCard";
 import BibliographyListDialog from "@/components/BibliographyListDialog";
 import type { Article } from "@/data/articles";
 
@@ -117,12 +118,12 @@ const Index = () => {
   const paginatedArticles = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-16 sm:pb-0">
       {/* Header */}
-      <header className="border-b border-border bg-card/60 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-4 sm:px-8">
-          <BookOpen className="h-6 w-6 text-primary shrink-0" />
-          <h1 className="text-xl font-semibold tracking-tight text-primary">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto flex items-center gap-3 px-4 py-3 sm:px-8">
+          <BookOpen className="h-5 w-5 text-primary shrink-0" />
+          <h1 className="font-headline text-lg font-semibold tracking-tight text-primary">
             Частное право
           </h1>
           <span className="hidden sm:inline font-body text-sm text-muted-foreground ml-1">
@@ -160,21 +161,21 @@ const Index = () => {
       </header>
 
       {/* Hero */}
-      <section className="container mx-auto px-4 pt-12 pb-8 sm:px-8 sm:pt-16 sm:pb-10">
+      <section className="container mx-auto px-4 pt-8 pb-6 sm:px-8 sm:pt-12 sm:pb-8">
         <div className="animate-fade-up max-w-3xl">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+          <h2 className="font-headline text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
             Библиографический каталог научных публикаций по&nbsp;частному праву
           </h2>
-          <p className="mt-2 font-body text-base text-muted-foreground leading-relaxed sm:text-lg">
+          <p className="mt-2 font-body text-sm text-muted-foreground leading-relaxed sm:text-base">
             Систематизированный каталог научных публикаций по&nbsp;основным институтам частного права в&nbsp;периодических изданиях и&nbsp;сборниках статей, составленный Романом Бевзенко
           </p>
         </div>
       </section>
 
       {/* Search & Filters */}
-      <section className="container mx-auto px-4 sm:px-8 pb-6">
+      <section className="container mx-auto px-4 sm:px-8 pb-5">
         <div
-          className="animate-fade-up space-y-4"
+          className="animate-fade-up space-y-3"
           style={{ animationDelay: "100ms" }}
         >
           <SearchBar value={search} onChange={handleSearchChange} />
@@ -200,133 +201,178 @@ const Index = () => {
 
       {/* Results */}
       <section className="container mx-auto px-4 sm:px-8 pb-16">
-        {showFallbackBanner && (
-          <div className="mb-4 rounded-md border border-border bg-card px-4 py-3">
-            <p className="font-body text-sm text-muted-foreground">
-              База временно недоступна — показана резервная версия каталога. Некоторые новые записи могут отсутствовать.
-            </p>
-          </div>
-        )}
-
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <p className="font-body text-sm text-muted-foreground">
-              {filtered.length}{" "}
-              {filtered.length === 1
-                ? "публикация"
-                : filtered.length < 5
-                ? "публикации"
-                : "публикаций"}
-              {isLoading && isUsingFallback && (
-                <span className="ml-2 animate-pulse">· загрузка из базы…</span>
-              )}
-              {totalPages > 1 && (
-                <span className="ml-2">
-                  · стр. {safePage} из {totalPages}
-                </span>
-              )}
-            </p>
-            <BibliographyListDialog articles={filtered} />
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                disabled={safePage <= 1}
-                className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                aria-label="Предыдущая страница"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                disabled={safePage >= totalPages}
-                className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                aria-label="Следующая страница"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center animate-fade-in">
-            <p className="font-body text-muted-foreground">
-              Ничего не найдено. Попробуйте изменить критерии поиска.
-            </p>
+        {isLoading && isUsingFallback ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
           </div>
         ) : (
           <>
-            <div className="grid gap-4 md:grid-cols-2">
-              {paginatedArticles.map((article, i) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  canEdit={!!user}
-                  style={{ animationDelay: `${Math.min(80 + i * 20, 400)}ms` }}
-                />
-              ))}
-            </div>
-            {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center flex-wrap gap-1">
-                <button
-                  onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  disabled={safePage <= 1}
-                  className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  ← Назад
-                </button>
-                {(() => {
-                  const pages: (number | "...")[] = [];
-                  if (totalPages <= 7) {
-                    for (let i = 1; i <= totalPages; i++) pages.push(i);
-                  } else {
-                    pages.push(1);
-                    if (safePage > 3) pages.push("...");
-                    for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
-                    if (safePage < totalPages - 2) pages.push("...");
-                    pages.push(totalPages);
-                  }
-                  return pages.map((p, i) =>
-                    p === "..." ? (
-                      <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-sm text-muted-foreground">…</span>
-                    ) : (
-                      <button
-                        key={p}
-                        onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                        className={`min-w-[36px] px-2 py-1.5 rounded-md border text-sm transition-colors ${
-                          p === safePage
-                            ? "border-primary bg-primary text-primary-foreground font-medium"
-                            : "border-border text-muted-foreground hover:text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    )
-                  );
-                })()}
-                <button
-                  onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  disabled={safePage >= totalPages}
-                  className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  Вперёд →
-                </button>
+            {showFallbackBanner && (
+              <div className="mb-4 rounded-md border border-border bg-card px-4 py-3">
+                <p className="font-body text-sm text-muted-foreground">
+                  База временно недоступна — показана резервная версия каталога. Некоторые новые записи могут отсутствовать.
+                </p>
               </div>
+            )}
+
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <p className="font-body text-sm text-muted-foreground">
+                  {filtered.length}{" "}
+                  {filtered.length === 1
+                    ? "публикация"
+                    : filtered.length < 5
+                    ? "публикации"
+                    : "публикаций"}
+                  {totalPages > 1 && (
+                    <span className="ml-2">
+                      · стр. {safePage} из {totalPages}
+                    </span>
+                  )}
+                </p>
+                <BibliographyListDialog articles={filtered} />
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={safePage <= 1}
+                    className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Предыдущая страница"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={safePage >= totalPages}
+                    className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Следующая страница"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center animate-fade-in">
+                <p className="font-body text-muted-foreground">
+                  Ничего не найдено. Попробуйте изменить критерии поиска.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {paginatedArticles.map((article, i) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={article}
+                      canEdit={!!user}
+                      style={{ animationDelay: `${Math.min(80 + i * 20, 400)}ms` }}
+                    />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="mt-8 flex items-center justify-center flex-wrap gap-1">
+                    <button
+                      onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      disabled={safePage <= 1}
+                      className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Назад
+                    </button>
+                    {(() => {
+                      const pages: (number | "...")[] = [];
+                      if (totalPages <= 7) {
+                        for (let i = 1; i <= totalPages; i++) pages.push(i);
+                      } else {
+                        pages.push(1);
+                        if (safePage > 3) pages.push("...");
+                        for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) pages.push(i);
+                        if (safePage < totalPages - 2) pages.push("...");
+                        pages.push(totalPages);
+                      }
+                      return pages.map((p, idx) =>
+                        p === "..." ? (
+                          <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-sm text-muted-foreground">…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            onClick={() => { setPage(p as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                            className={`min-w-[36px] px-2 py-1.5 rounded-md border text-sm transition-colors ${
+                              p === safePage
+                                ? "border-primary bg-primary text-primary-foreground font-medium"
+                                : "border-border text-muted-foreground hover:text-foreground hover:bg-accent"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        )
+                      );
+                    })()}
+                    <button
+                      onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      disabled={safePage >= totalPages}
+                      className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Вперёд →
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-6">
+      {/* Footer — desktop only */}
+      <footer className="hidden sm:block border-t border-border py-5">
         <div className="container mx-auto px-4 sm:px-8">
           <p className="font-body text-xs text-muted-foreground text-center">
             © {new Date().getFullYear()} Каталог статей по частному праву
           </p>
         </div>
       </footer>
+
+      {/* Bottom Tab Bar — mobile only */}
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-card/95 backdrop-blur-sm border-t border-border flex">
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-primary"
+          aria-label="Каталог"
+        >
+          <BookOpen className="h-5 w-5" />
+          <span className="font-body text-[10px] font-medium">Каталог</span>
+        </button>
+        <button
+          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-muted-foreground"
+          aria-label="Поиск"
+          onClick={() => document.querySelector<HTMLInputElement>('input[placeholder]')?.focus()}
+        >
+          <Search className="h-5 w-5" />
+          <span className="font-body text-[10px]">Поиск</span>
+        </button>
+        {user ? (
+          <Link
+            to="/admin"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-muted-foreground"
+            aria-label="Управление"
+          >
+            <Settings className="h-5 w-5" />
+            <span className="font-body text-[10px]">Управление</span>
+          </Link>
+        ) : (
+          <Link
+            to="/login"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-muted-foreground"
+            aria-label="Войти"
+          >
+            <LogIn className="h-5 w-5" />
+            <span className="font-body text-[10px]">Войти</span>
+          </Link>
+        )}
+      </nav>
     </div>
   );
 };

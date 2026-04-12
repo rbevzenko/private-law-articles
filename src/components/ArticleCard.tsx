@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Article } from "@/data/articles";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -55,7 +54,7 @@ const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
     <>
       <article
         style={style}
-        className="group relative rounded-md border border-border bg-card p-6 transition-[box-shadow,transform] duration-300 ease-out hover:shadow-lg hover:shadow-primary/5 active:scale-[0.99]"
+        className="group relative rounded border border-border bg-card p-5 transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-primary/8 hover:translate-y-[-1px] active:scale-[0.99] border-l-[3px] border-l-transparent hover:border-l-primary"
       >
         {/* Action buttons */}
         {canEdit && (
@@ -81,32 +80,33 @@ const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
           </div>
         )}
 
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {article.topics.map((topic) => (
-            <Badge
-              key={topic}
-              variant="secondary"
-              className="font-body text-xs font-medium tracking-wide"
-            >
-              {topic}
-            </Badge>
-          ))}
-        </div>
+        {article.topics.length > 0 && (
+          <div className="mb-2.5 flex flex-wrap gap-1">
+            {article.topics.map((topic) => (
+              <span
+                key={topic}
+                className="inline-block px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary/70 bg-primary/8 rounded"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        )}
 
-        <h3 className="mb-2 text-lg font-semibold leading-snug tracking-tight text-foreground pr-16">
+        <h3 className="mb-1.5 font-headline text-base font-semibold leading-snug text-foreground pr-14">
           {article.title}
         </h3>
 
-        <p className="mb-2 font-body text-sm font-medium text-foreground/80">
+        <p className="mb-1 font-body text-sm font-medium text-foreground/75">
           {article.authors.join(", ")}
         </p>
 
-        <p className="mb-3 font-body text-sm text-muted-foreground">
+        <p className="font-body text-xs text-muted-foreground leading-relaxed">
           {citation}
         </p>
 
         {article.section && (
-          <p className="font-body text-sm leading-relaxed text-muted-foreground line-clamp-3">
+          <p className="mt-2 font-body text-xs leading-relaxed text-muted-foreground line-clamp-3">
             {article.section}
           </p>
         )}
