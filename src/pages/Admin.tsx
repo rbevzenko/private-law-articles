@@ -95,7 +95,7 @@ const Admin = () => {
             <div>
               <h2 className="text-2xl font-bold tracking-tight mb-2">Управление статьями</h2>
               <p className="text-muted-foreground font-body">
-                Сканируйте журналы или добавьте статью вручную.
+                Сканируйте издания или добавьте статью вручную.
               </p>
             </div>
             <Button onClick={() => setCreateOpen(true)} className="shrink-0">
@@ -187,7 +187,7 @@ const Admin = () => {
 
           {logs.length > 0 && (
             <Card className="p-5">
-              <h3 className="font-semibold mb-3">Журнал операций</h3>
+              <h3 className="font-semibold mb-3">Лог операций</h3>
               <div className="bg-muted rounded-md p-3 max-h-64 overflow-y-auto">
                 {logs.map((log, i) => (
                   <div key={i} className="text-xs font-mono text-muted-foreground py-0.5">

@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
-import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search, ListFilter } from "lucide-react";
+import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import ArticleCard from "@/components/ArticleCard";
 import SkeletonCard from "@/components/SkeletonCard";
-import { Button } from "@/components/ui/button";
+import BibliographyListDialog from "@/components/BibliographyListDialog";
 import type { Article } from "@/data/articles";
 
 const PAGE_SIZE = 50;
@@ -16,36 +16,48 @@ const PAGE_SIZE = 50;
 const Index = () => {
   const [search, setSearch] = useState("");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [year, setYear] = useState("all");
-  const [journal, setJournal] = useState("all");
-  const [issue, setIssue] = useState("all");
-  const [author, setAuthor] = useState("all");
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
+  const [selectedJournals, setSelectedJournals] = useState<string[]>([]);
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [page, setPage] = useState(1);
 
-  const { data: dbArticles, isLoading } = useArticles();
+  const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
   const { user, signOut } = useAuth();
 
-  // Merge DB articles with static ones, preferring DB
   const allArticles: Article[] = useMemo(() => {
+    const normalizeJournal = (j: string) =>
+      j === "Практика разрешения коммерческих споров"
+        ? "Практика рассмотрения коммерческих споров"
+        : j;
+
     if (dbArticles && dbArticles.length > 0) {
       return dbArticles.map((a) => ({
         id: a.id,
         title: a.title,
         authors: a.authors,
-        journal: a.journal,
+        journal: normalizeJournal(a.journal),
         year: a.year,
-        issue: a.issue || undefined,
+        issue: a.issue ?? null,
+        section: a.section ?? null,
         topics: a.topics,
+        url: a.url ?? null,
+        source_url: a.source_url ?? null,
+        created_at: a.created_at,
       }));
     }
+
     return staticArticles;
   }, [dbArticles]);
 
   const allTopics = useMemo(
-    () => dbTopics && dbTopics.length > 0 ? dbTopics : [...TOPICS],
+    () => (dbTopics && dbTopics.length > 0 ? dbTopics : [...TOPICS]),
     [dbTopics]
   );
+
+  const isUsingFallback = !dbArticles || dbArticles.length === 0;
+  const showFallbackBanner = !isLoading && isError && isUsingFallback;
 
   const journals = useMemo(
     () => [...new Set(allArticles.map((a) => a.journal))].sort(),
@@ -64,25 +76,25 @@ const Index = () => {
 
   const issues = useMemo(() => {
     const relevant = allArticles.filter((a) => {
-      if (journal !== "all" && a.journal !== journal) return false;
-      if (year !== "all" && a.year !== Number(year)) return false;
+      if (selectedJournals.length > 0 && !selectedJournals.includes(a.journal)) return false;
+      if (selectedYears.length > 0 && !selectedYears.includes(String(a.year))) return false;
       return !!a.issue;
     });
-    return [...new Set(relevant.map((a) => a.issue!))].sort((a, b) => {
-      const na = parseInt(a), nb = parseInt(b);
+    return [...new Set(relevant.map((a) => a.issue!).filter(Boolean))].sort((a, b) => {
+      const na = parseInt(a ?? ''), nb = parseInt(b ?? '');
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      return a.localeCompare(b);
+      return (a ?? '').localeCompare(b ?? '');
     });
-  }, [allArticles, journal, year]);
+  }, [allArticles, selectedJournals, selectedYears]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return allArticles.filter((a) => {
       if (selectedTopics.length > 0 && !selectedTopics.some((t) => a.topics.includes(t))) return false;
-      if (year !== "all" && a.year !== Number(year)) return false;
-      if (journal !== "all" && a.journal !== journal) return false;
-      if (issue !== "all" && a.issue !== issue) return false;
-      if (author !== "all" && !a.authors.includes(author)) return false;
+      if (selectedYears.length > 0 && !selectedYears.includes(String(a.year))) return false;
+      if (selectedJournals.length > 0 && !selectedJournals.includes(a.journal)) return false;
+      if (selectedIssues.length > 0 && (!a.issue || !selectedIssues.includes(a.issue))) return false;
+      if (selectedAuthors.length > 0 && !selectedAuthors.some((au) => a.authors.includes(au))) return false;
       if (
         q &&
         !a.title.toLowerCase().includes(q) &&
@@ -92,15 +104,13 @@ const Index = () => {
         return false;
       return true;
     });
-  }, [search, selectedTopics, year, journal, issue, author, allArticles]);
+  }, [search, selectedTopics, selectedYears, selectedJournals, selectedIssues, selectedAuthors, allArticles]);
 
-  // Reset page when filters change
   const handleTopicsChange = useCallback((v: string[]) => { setSelectedTopics(v); setPage(1); }, []);
-  const handleYearChange = useCallback((v: string) => { setYear(v); setPage(1); }, []);
-  const handleJournalChange = useCallback((v: string) => { setJournal(v); setIssue("all"); setPage(1); }, []);
-  const handleIssueChange = useCallback((v: string) => { setIssue(v); setPage(1); }, []);
-  const handleAuthorChange = useCallback((v: string) => { setAuthor(v); setPage(1); }, []);
-  const handleYearChangeWithIssueReset = useCallback((v: string) => { setYear(v); setIssue("all"); setPage(1); }, []);
+  const handleJournalsChange = useCallback((v: string[]) => { setSelectedJournals(v); setSelectedIssues([]); setPage(1); }, []);
+  const handleIssuesChange = useCallback((v: string[]) => { setSelectedIssues(v); setPage(1); }, []);
+  const handleAuthorsChange = useCallback((v: string[]) => { setSelectedAuthors(v); setPage(1); }, []);
+  const handleYearsChange = useCallback((v: string[]) => { setSelectedYears(v); setSelectedIssues([]); setPage(1); }, []);
   const handleSearchChange = useCallback((v: string) => { setSearch(v); setPage(1); }, []);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -129,15 +139,13 @@ const Index = () => {
                 >
                   <Settings className="h-5 w-5" />
                 </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
                   onClick={signOut}
                   title="Выйти"
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground transition-colors p-2"
                 >
                   <LogOut className="h-5 w-5" />
-                </Button>
+                </button>
               </>
             ) : (
               <Link
@@ -174,26 +182,26 @@ const Index = () => {
           <FilterPanel
             selectedTopics={selectedTopics}
             onTopicsChange={handleTopicsChange}
-            selectedYear={year}
-            onYearChange={handleYearChangeWithIssueReset}
+            selectedYears={selectedYears}
+            onYearsChange={handleYearsChange}
             years={years}
             topics={allTopics}
             journals={journals}
-            selectedJournal={journal}
-            onJournalChange={handleJournalChange}
+            selectedJournals={selectedJournals}
+            onJournalsChange={handleJournalsChange}
             issues={issues}
-            selectedIssue={issue}
-            onIssueChange={handleIssueChange}
+            selectedIssues={selectedIssues}
+            onIssuesChange={handleIssuesChange}
             authors={authors}
-            selectedAuthor={author}
-            onAuthorChange={handleAuthorChange}
+            selectedAuthors={selectedAuthors}
+            onAuthorsChange={handleAuthorsChange}
           />
         </div>
       </section>
 
       {/* Results */}
       <section className="container mx-auto px-4 sm:px-8 pb-16">
-        {isLoading ? (
+        {isLoading && isUsingFallback ? (
           <div className="grid gap-3 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
@@ -201,20 +209,31 @@ const Index = () => {
           </div>
         ) : (
           <>
+            {showFallbackBanner && (
+              <div className="mb-4 rounded-md border border-border bg-card px-4 py-3">
+                <p className="font-body text-sm text-muted-foreground">
+                  База временно недоступна — показана резервная версия каталога. Некоторые новые записи могут отсутствовать.
+                </p>
+              </div>
+            )}
+
             <div className="mb-4 flex items-center justify-between">
-              <p className="font-body text-sm text-muted-foreground">
-                {filtered.length}{" "}
-                {filtered.length === 1
-                  ? "публикация"
-                  : filtered.length < 5
-                  ? "публикации"
-                  : "публикаций"}
-                {totalPages > 1 && (
-                  <span className="ml-2">
-                    · стр. {safePage} из {totalPages}
-                  </span>
-                )}
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="font-body text-sm text-muted-foreground">
+                  {filtered.length}{" "}
+                  {filtered.length === 1
+                    ? "публикация"
+                    : filtered.length < 5
+                    ? "публикации"
+                    : "публикаций"}
+                  {totalPages > 1 && (
+                    <span className="ml-2">
+                      · стр. {safePage} из {totalPages}
+                    </span>
+                  )}
+                </p>
+                <BibliographyListDialog articles={filtered} />
+              </div>
               {totalPages > 1 && (
                 <div className="flex items-center gap-2">
                   <button
@@ -275,13 +294,13 @@ const Index = () => {
                         if (safePage < totalPages - 2) pages.push("...");
                         pages.push(totalPages);
                       }
-                      return pages.map((p, i) =>
+                      return pages.map((p, idx) =>
                         p === "..." ? (
-                          <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-sm text-muted-foreground">…</span>
+                          <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-sm text-muted-foreground">…</span>
                         ) : (
                           <button
                             key={p}
-                            onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                            onClick={() => { setPage(p as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                             className={`min-w-[36px] px-2 py-1.5 rounded-md border text-sm transition-colors ${
                               p === safePage
                                 ? "border-primary bg-primary text-primary-foreground font-medium"

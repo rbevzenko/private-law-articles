@@ -1,8 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Origin': 'https://private-law-articles.lovable.app',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 const TOPIC_KEYWORDS: Record<string, string[]> = {
@@ -286,10 +286,32 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  // Require authenticated user
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+  const supabaseForAuth = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!
+  )
+  const { data: { user }, error: authError } = await supabaseForAuth.auth.getUser(
+    authHeader.replace('Bearer ', '')
+  )
+  if (!user || authError) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
   try {
     const { journal, mode } = await req.json()
     // mode: "all" = scrape all available issues, "new" = only issues not yet in DB
-    const scrapeMode = mode || 'new'
+    const scrapeMode = (mode === 'all' || mode === 'new') ? mode : 'new'
     const startTime = Date.now()
 
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')
@@ -459,7 +481,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Scrape error:', error)
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

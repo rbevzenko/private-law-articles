@@ -45,9 +45,7 @@ const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
   const citation = [
     article.journal,
     article.year,
-    article.volume && `Т. ${article.volume}`,
     article.issue && formatIssue(article.issue),
-    article.pages && `С. ${article.pages}`,
   ]
     .filter(Boolean)
     .join(". ");
@@ -107,9 +105,9 @@ const ArticleCard = ({ article, style, canEdit = false }: ArticleCardProps) => {
           {citation}
         </p>
 
-        {article.abstract && (
+        {article.section && (
           <p className="mt-2 font-body text-xs leading-relaxed text-muted-foreground line-clamp-3">
-            {article.abstract}
+            {article.section}
           </p>
         )}
       </article>

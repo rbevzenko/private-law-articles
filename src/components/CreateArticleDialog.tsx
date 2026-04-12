@@ -84,7 +84,7 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="create-journal">Журнал</Label>
+              <Label htmlFor="create-journal">Издание</Label>
               <ComboboxInput id="create-journal" value={journal} onChange={setJournal} suggestions={allJournals || []} placeholder="Начните вводить название…" />
             </div>
             <div>
