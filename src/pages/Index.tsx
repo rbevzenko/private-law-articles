@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
-import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search } from "lucide-react";
+import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ const Index = () => {
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [page, setPage] = useState(1);
+  const [catalogSheetOpen, setCatalogSheetOpen] = useState(false);
 
   const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
@@ -63,6 +64,12 @@ const Index = () => {
     () => [...new Set(allArticles.map((a) => a.journal))].sort(),
     [allArticles]
   );
+
+  const journalCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allArticles.forEach((a) => { counts[a.journal] = (counts[a.journal] || 0) + 1; });
+    return counts;
+  }, [allArticles]);
 
   const years = useMemo(
     () => [...new Set(allArticles.map((a) => a.year))].sort((a, b) => b - a),
@@ -341,6 +348,7 @@ const Index = () => {
         <button
           className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-primary"
           aria-label="Каталог"
+          onClick={() => setCatalogSheetOpen(true)}
         >
           <BookOpen className="h-5 w-5" />
           <span className="font-body text-[10px] font-medium">Каталог</span>
@@ -373,6 +381,62 @@ const Index = () => {
           </Link>
         )}
       </nav>
+
+      {/* Journals bottom sheet */}
+      {catalogSheetOpen && (
+        <div className="sm:hidden fixed inset-0 z-30 flex flex-col justify-end">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            onClick={() => setCatalogSheetOpen(false)}
+          />
+          <div className="relative bg-card rounded-t-xl shadow-xl max-h-[80dvh] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+              <h2 className="font-headline text-base font-semibold text-foreground">Издания</h2>
+              <button
+                onClick={() => setCatalogSheetOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                aria-label="Закрыть"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <ul className="overflow-y-auto overscroll-contain py-2">
+              {journals.map((j) => (
+                <li key={j}>
+                  <button
+                    className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors active:bg-accent ${
+                      selectedJournals.includes(j) ? "bg-primary/8 text-primary" : "hover:bg-accent"
+                    }`}
+                    onClick={() => {
+                      handleJournalsChange(
+                        selectedJournals.includes(j)
+                          ? selectedJournals.filter((x) => x !== j)
+                          : [j]
+                      );
+                      setCatalogSheetOpen(false);
+                    }}
+                  >
+                    <span className="font-body text-sm leading-snug pr-3">{j}</span>
+                    <span className="font-body text-xs text-muted-foreground shrink-0">
+                      {journalCounts[j] ?? 0}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {selectedJournals.length > 0 && (
+              <div className="px-4 py-3 border-t border-border shrink-0">
+                <button
+                  className="w-full py-2 rounded border border-border font-body text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => { handleJournalsChange([]); setCatalogSheetOpen(false); }}
+                >
+                  Показать все издания
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
