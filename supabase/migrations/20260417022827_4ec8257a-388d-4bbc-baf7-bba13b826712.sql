@@ -1,0 +1,1 @@
+DELETE FROM public.articles WHERE journal = 'Сборник статей в честь Е.А. Суханова';
