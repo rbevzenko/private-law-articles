@@ -64,7 +64,7 @@ const MultiSelectFilter = ({
       <PopoverContent className={`${popoverWidth || "w-[280px]"} p-1`} align="start">
         <div className="px-2 py-1.5">
           <input
-            autoFocus
+            ref={(el) => { if (el) el.focus({ preventScroll: true }); }}
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
