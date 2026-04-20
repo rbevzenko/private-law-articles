@@ -218,6 +218,7 @@ const Index = () => {
             authors={authors}
             selectedAuthors={selectedAuthors}
             onAuthorsChange={handleAuthorsChange}
+            onClearSearch={() => { setSearch(""); setPage(1); }}
           />
         </div>
       </section>
