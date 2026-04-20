@@ -68,7 +68,7 @@ const MultiSelectFilter = ({
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded border border-input bg-background px-2 py-1 text-sm outline-none focus:border-primary"
+            className="w-full rounded border border-input bg-background px-2 py-1 text-base sm:text-sm outline-none focus:border-primary"
           />
         </div>
         <div className="max-h-[280px] overflow-y-auto">

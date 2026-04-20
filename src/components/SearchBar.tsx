@@ -13,7 +13,7 @@ const SearchBar = ({ value, onChange }: SearchBarProps) => {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Поиск по названию, автору, изданию…"
-        className="w-full h-10 pl-9 pr-8 rounded border border-border bg-card font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+        className="w-full h-10 pl-9 pr-8 rounded border border-border bg-card font-body text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
       />
       {value && (
         <button
