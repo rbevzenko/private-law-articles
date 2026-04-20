@@ -12,6 +12,10 @@ const SearchBar = ({ value, onChange }: SearchBarProps) => {
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onFocus={() => {
+          const y = window.scrollY;
+          requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior }));
+        }}
         placeholder="Поиск по названию, автору, изданию…"
         className="w-full h-10 pl-9 pr-8 rounded border border-border bg-card font-body text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
       />
