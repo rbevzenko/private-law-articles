@@ -137,6 +137,22 @@ const Index = () => {
             — библиография
           </span>
           <div className="ml-auto flex items-center gap-2">
+            <a
+              href="https://boosty.to/rbevzenko"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-body text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Лекции, книги и статьи Романа Бевзенко
+            </a>
+            <a
+              href="https://boosty.to/rbevzenko"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sm:hidden inline-flex items-center px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground font-body text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              Boosty
+            </a>
             {user ? (
               <>
                 <Link
