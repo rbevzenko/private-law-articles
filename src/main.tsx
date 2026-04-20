@@ -4,7 +4,7 @@ import "./index.css";
 
 if (window.location.hostname === "private-law-articles.lovable.app") {
   window.location.replace(
-    "https://private-law-articles.vercel.app" +
+    "https://roman-bevzenko.com" +
       window.location.pathname +
       window.location.search +
       window.location.hash
