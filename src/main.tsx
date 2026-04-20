@@ -2,6 +2,15 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+if (window.location.hostname === "private-law-articles.lovable.app") {
+  window.location.replace(
+    "https://private-law-articles.vercel.app" +
+      window.location.pathname +
+      window.location.search +
+      window.location.hash
+  );
+}
+
 // Удаляем все service workers (PWA отключён)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
