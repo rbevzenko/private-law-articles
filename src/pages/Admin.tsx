@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus, Upload } from "lucide-react";
+import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus, Upload, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import CreateArticleDialog from "@/components/CreateArticleDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ const Admin = () => {
   const [mode, setMode] = useState<ScrapeMode>("new");
   const [createOpen, setCreateOpen] = useState(false);
 
+  const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ inserted: number; skipped: number; errors: number } | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
@@ -90,6 +91,41 @@ const Admin = () => {
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const PAGE = 1000;
+      let all: object[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("articles")
+          .select("*")
+          .order("journal")
+          .order("year")
+          .order("title")
+          .range(from, from + PAGE - 1);
+        if (error) throw new Error(error.message);
+        if (!data || data.length === 0) break;
+        all = all.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      const blob = new Blob([JSON.stringify(all, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `articles-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Экспорт завершён", description: `Скачано ${all.length} статей` });
+    } catch (err: any) {
+      toast({ title: "Ошибка экспорта", description: err.message, variant: "destructive" });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -316,6 +352,21 @@ const Admin = () => {
                 </div>
               </div>
             )}
+          </Card>
+
+          {/* JSON Export */}
+          <Card className="p-5">
+            <h3 className="font-semibold mb-1">Экспорт в JSON</h3>
+            <p className="text-sm text-muted-foreground font-body mb-4">
+              Скачать всю базу статей одним файлом.
+            </p>
+            <Button variant="outline" onClick={handleExport} disabled={exporting}>
+              {exporting ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Экспортирую...</>
+              ) : (
+                <><Download className="h-4 w-4 mr-2" />Скачать JSON</>
+              )}
+            </Button>
           </Card>
         </div>
 
