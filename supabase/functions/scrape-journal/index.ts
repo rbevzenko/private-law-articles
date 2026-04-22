@@ -452,7 +452,7 @@ Deno.serve(async (req) => {
     for (const article of allArticles) {
       const { data: insertedData, error } = await supabase
         .from('articles')
-        .upsert(article, { onConflict: 'title,journal,year', ignoreDuplicates: true })
+        .upsert(article, { onConflict: 'title,journal,year,issue', ignoreDuplicates: true })
         .select('id')
       if (error) {
         logs.push(`Ошибка вставки "${article.title}": ${error.message}`)
