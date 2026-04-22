@@ -70,7 +70,7 @@ const Admin = () => {
         const batch = rows.slice(i, i + BATCH);
         const { data, error } = await supabase
           .from("articles")
-          .upsert(batch, { onConflict: "title,journal,year", ignoreDuplicates: true })
+          .upsert(batch, { onConflict: "title,journal,year,issue", ignoreDuplicates: true })
           .select("id");
 
         if (error) {
