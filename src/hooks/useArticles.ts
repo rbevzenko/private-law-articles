@@ -112,9 +112,13 @@ export function useLastImports() {
     retry: 0,
     select: (articles: DbArticle[]): LastImportInfo[] => {
       if (!articles.length) return [];
+      const toLocalDay = (ts: string) => {
+        const d = new Date(ts);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      };
       const byDay = new Map<string, DbArticle[]>();
       for (const a of articles) {
-        const day = a.created_at.slice(0, 10);
+        const day = toLocalDay(a.created_at);
         if (!byDay.has(day)) byDay.set(day, []);
         byDay.get(day)!.push(a);
       }
