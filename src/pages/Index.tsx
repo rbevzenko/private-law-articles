@@ -203,7 +203,8 @@ const Index = () => {
             <span className="font-medium">{lastImport.date}.</span>{" "}
             Добавлено {lastImport.count}{" "}
             {lastImport.count === 1 ? "статья" : lastImport.count < 5 ? "статьи" : "статей"} из{" "}
-            {lastImport.journals.join(", ")}
+            {lastImport.journals.join(", ")} за {lastImport.yearRange}{" "}
+            {lastImport.yearRange.includes("–") ? "годы" : "год"}
           </div>
         </section>
       )}

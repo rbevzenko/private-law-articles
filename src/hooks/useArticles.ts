@@ -101,6 +101,7 @@ export interface LastImportInfo {
   date: string;
   count: number;
   journals: string[];
+  yearRange: string;
 }
 
 export function useLastImport() {
@@ -116,7 +117,11 @@ export function useLastImport() {
       const recent = articles.filter((a) => a.created_at.slice(0, 10) === maxDay);
       const journalSet = new Set(recent.map((a) => a.journal));
       const [y, m, d] = maxDay.split("-");
-      return { date: `${d}.${m}.${y}`, count: recent.length, journals: Array.from(journalSet) };
+      const years = recent.map((a) => a.year);
+      const minYear = Math.min(...years);
+      const maxYear = Math.max(...years);
+      const yearRange = minYear === maxYear ? `${minYear}` : `${minYear}–${maxYear}`;
+      return { date: `${d}.${m}.${y}`, count: recent.length, journals: Array.from(journalSet), yearRange };
     },
   });
 }
