@@ -96,3 +96,27 @@ export function useArticleJournals() {
     },
   });
 }
+
+export interface LastImportInfo {
+  date: string;
+  count: number;
+  journals: string[];
+}
+
+export function useLastImport() {
+  return useQuery({
+    queryKey: ["articles"],
+    queryFn: fetchAllArticles,
+    staleTime: STALE_TIME,
+    retry: 0,
+    select: (articles: DbArticle[]): LastImportInfo | null => {
+      if (!articles.length) return null;
+      const maxTs = articles.reduce((max, a) => (a.created_at > max ? a.created_at : max), articles[0].created_at);
+      const maxDay = maxTs.slice(0, 10);
+      const recent = articles.filter((a) => a.created_at.slice(0, 10) === maxDay);
+      const journalSet = new Set(recent.map((a) => a.journal));
+      const [y, m, d] = maxDay.split("-");
+      return { date: `${d}.${m}.${y}`, count: recent.length, journals: Array.from(journalSet) };
+    },
+  });
+}
