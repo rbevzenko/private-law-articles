@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus } from "lucide-react";
+import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import CreateArticleDialog from "@/components/CreateArticleDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,73 @@ const Admin = () => {
   const [results, setResults] = useState<{ total: number; inserted: number; skipped: number; timedOut?: boolean } | null>(null);
   const [mode, setMode] = useState<ScrapeMode>("new");
   const [createOpen, setCreateOpen] = useState(false);
+
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ inserted: number; skipped: number; errors: number } | null>(null);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleJsonImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFileName(file.name);
+    setImportResult(null);
+    setImporting(true);
+
+    try {
+      const text = await file.text();
+      const raw: any[] = JSON.parse(text);
+
+      if (!Array.isArray(raw)) throw new Error("JSON должен быть массивом объектов");
+
+      const rows = raw.map((item) => ({
+        title: String(item.title ?? "").trim(),
+        authors: item.author
+          ? [String(item.author).trim()]
+          : Array.isArray(item.authors)
+          ? item.authors.map(String)
+          : [],
+        journal: String(item.journal ?? "").trim(),
+        year: Number(item.year),
+        issue: item.issue != null ? String(item.issue).trim() : null,
+        section: item.section ? String(item.section).trim() : null,
+        topics: Array.isArray(item.topics) ? item.topics.map(String) : [],
+        url: item.url ? String(item.url).trim() : null,
+        source_url: item.source_url ? String(item.source_url).trim() : null,
+      })).filter((r) => r.title && r.journal && r.year);
+
+      const BATCH = 50;
+      let inserted = 0;
+      let skipped = 0;
+      let errors = 0;
+
+      for (let i = 0; i < rows.length; i += BATCH) {
+        const batch = rows.slice(i, i + BATCH);
+        const { data, error } = await supabase
+          .from("articles")
+          .upsert(batch, { onConflict: "title,journal,year", ignoreDuplicates: true })
+          .select("id");
+
+        if (error) {
+          errors += batch.length;
+        } else {
+          inserted += data?.length ?? 0;
+          skipped += batch.length - (data?.length ?? 0);
+        }
+      }
+
+      setImportResult({ inserted, skipped, errors });
+      toast({
+        title: "Импорт завершён",
+        description: `Добавлено: ${inserted}, пропущено дублей: ${skipped}`,
+      });
+    } catch (err: any) {
+      toast({ title: "Ошибка импорта", description: err.message, variant: "destructive" });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   if (authLoading) {
     return (
@@ -197,6 +264,59 @@ const Admin = () => {
               </div>
             </Card>
           )}
+          {/* JSON Import */}
+          <Card className="p-5">
+            <h3 className="font-semibold mb-1">Импорт из JSON</h3>
+            <p className="text-sm text-muted-foreground font-body mb-4">
+              Загрузите JSON-файл со статьями. Дубли (по названию + изданию + году) пропускаются автоматически.
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleJsonImport}
+                className="hidden"
+                id="json-upload"
+              />
+              <Button
+                asChild
+                variant="outline"
+                disabled={importing}
+                className="cursor-pointer"
+              >
+                <label htmlFor="json-upload" className="cursor-pointer flex items-center gap-2">
+                  {importing ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Импортирую...</>
+                  ) : (
+                    <><Upload className="h-4 w-4" />Выбрать файл</>
+                  )}
+                </label>
+              </Button>
+              {importFileName && !importing && (
+                <span className="text-sm text-muted-foreground font-body truncate max-w-[200px]">
+                  {importFileName}
+                </span>
+              )}
+            </div>
+
+            {importResult && (
+              <div className="mt-4 grid grid-cols-3 gap-4 text-center border-t border-border pt-4">
+                <div>
+                  <div className="text-2xl font-bold text-green-700">{importResult.inserted}</div>
+                  <div className="text-xs text-green-600 font-body">Добавлено</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-amber-700">{importResult.skipped}</div>
+                  <div className="text-xs text-amber-600 font-body">Пропущено</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-red-700">{importResult.errors}</div>
+                  <div className="text-xs text-red-600 font-body">Ошибок</div>
+                </div>
+              </div>
+            )}
+          </Card>
         </div>
 
         <CreateArticleDialog open={createOpen} onOpenChange={setCreateOpen} />
