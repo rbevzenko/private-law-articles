@@ -57,7 +57,7 @@ const CreateArticleDialog = ({ open, onOpenChange }: Props) => {
         authors: authors.split(",").map((a) => a.trim()).filter(Boolean),
         journal: journal.trim(),
         year: Number(year),
-        issue: issue.trim() || null,
+        issue: issue.trim() || '',
         url: url.trim() || null,
         topics,
       },

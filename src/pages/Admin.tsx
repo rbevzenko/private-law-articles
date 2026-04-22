@@ -54,7 +54,7 @@ const Admin = () => {
           : [],
         journal: String(item.journal ?? "").trim(),
         year: Number(item.year),
-        issue: item.issue != null ? String(item.issue).trim() : null,
+        issue: item.issue != null ? String(item.issue).trim() : '',
         section: item.section ? String(item.section).trim() : null,
         topics: Array.isArray(item.topics) ? item.topics.map(String) : [],
         url: item.url ? String(item.url).trim() : null,
