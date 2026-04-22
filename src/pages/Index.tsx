@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useArticles, useArticleTopics } from "@/hooks/useArticles";
+import { useArticles, useArticleTopics, useLastImport } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
 import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
@@ -25,6 +25,7 @@ const Index = () => {
 
   const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
+  const { data: lastImport } = useLastImport();
   const { user, signOut } = useAuth();
 
   const allArticles: Article[] = useMemo(() => {
@@ -194,6 +195,18 @@ const Index = () => {
           </p>
         </div>
       </section>
+
+      {/* Last import news */}
+      {!isUsingFallback && lastImport && (
+        <section className="container mx-auto px-4 sm:px-8 pb-4">
+          <div className="rounded-md border border-border bg-card/60 px-4 py-2.5 font-body text-sm text-foreground">
+            <span className="font-medium">{lastImport.date}.</span>{" "}
+            Добавлено {lastImport.count}{" "}
+            {lastImport.count === 1 ? "статья" : lastImport.count < 5 ? "статьи" : "статей"} из{" "}
+            {lastImport.journals.join(", ")}
+          </div>
+        </section>
+      )}
 
       {/* Search & Filters */}
       <section className="container mx-auto px-4 sm:px-8 pb-5">
