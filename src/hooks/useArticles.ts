@@ -104,24 +104,31 @@ export interface LastImportInfo {
   yearRange: string;
 }
 
-export function useLastImport() {
+export function useLastImports() {
   return useQuery({
     queryKey: ["articles"],
     queryFn: fetchAllArticles,
     staleTime: STALE_TIME,
     retry: 0,
-    select: (articles: DbArticle[]): LastImportInfo | null => {
-      if (!articles.length) return null;
-      const maxTs = articles.reduce((max, a) => (a.created_at > max ? a.created_at : max), articles[0].created_at);
-      const maxDay = maxTs.slice(0, 10);
-      const recent = articles.filter((a) => a.created_at.slice(0, 10) === maxDay);
-      const journalSet = new Set(recent.map((a) => a.journal));
-      const [y, m, d] = maxDay.split("-");
-      const years = recent.map((a) => a.year);
-      const minYear = Math.min(...years);
-      const maxYear = Math.max(...years);
-      const yearRange = minYear === maxYear ? `${minYear}` : `${minYear}–${maxYear}`;
-      return { date: `${d}.${m}.${y}`, count: recent.length, journals: Array.from(journalSet), yearRange };
+    select: (articles: DbArticle[]): LastImportInfo[] => {
+      if (!articles.length) return [];
+      const byDay = new Map<string, DbArticle[]>();
+      for (const a of articles) {
+        const day = a.created_at.slice(0, 10);
+        if (!byDay.has(day)) byDay.set(day, []);
+        byDay.get(day)!.push(a);
+      }
+      const sortedDays = Array.from(byDay.keys()).sort((a, b) => b.localeCompare(a)).slice(0, 3);
+      return sortedDays.map((day) => {
+        const group = byDay.get(day)!;
+        const [y, m, d] = day.split("-");
+        const journalSet = new Set(group.map((a) => a.journal));
+        const years = group.map((a) => a.year);
+        const minYear = Math.min(...years);
+        const maxYear = Math.max(...years);
+        const yearRange = minYear === maxYear ? `${minYear}` : `${minYear}–${maxYear}`;
+        return { date: `${d}.${m}.${y}`, count: group.length, journals: Array.from(journalSet), yearRange };
+      });
     },
   });
 }

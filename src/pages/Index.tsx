@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useArticles, useArticleTopics, useLastImport } from "@/hooks/useArticles";
+import { useArticles, useArticleTopics, useLastImports } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
 import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
@@ -25,7 +25,7 @@ const Index = () => {
 
   const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
-  const { data: lastImport } = useLastImport();
+  const { data: lastImports } = useLastImports();
   const { user, signOut } = useAuth();
 
   const allArticles: Article[] = useMemo(() => {
@@ -196,15 +196,19 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Last import news */}
-      {!isUsingFallback && lastImport && (
+      {/* Last imports news */}
+      {!isUsingFallback && lastImports && lastImports.length > 0 && (
         <section className="container mx-auto px-4 sm:px-8 pb-4">
-          <div className="rounded-md border border-border bg-card/60 px-4 py-2.5 font-body text-sm text-foreground">
-            <span className="font-medium">{lastImport.date}.</span>{" "}
-            Добавлено {lastImport.count}{" "}
-            {lastImport.count === 1 ? "статья" : lastImport.count < 5 ? "статьи" : "статей"} из{" "}
-            {lastImport.journals.join(", ")} за {lastImport.yearRange}{" "}
-            {lastImport.yearRange.includes("–") ? "годы" : "год"}
+          <div className="rounded-md border border-border bg-card/60 px-4 py-3 font-body text-sm text-foreground divide-y divide-border">
+            {lastImports.map((item) => (
+              <div key={item.date} className="py-1.5 first:pt-0 last:pb-0">
+                <span className="font-medium">{item.date}.</span>{" "}
+                Добавлено {item.count}{" "}
+                {item.count === 1 ? "статья" : item.count < 5 ? "статьи" : "статей"} из{" "}
+                {item.journals.join(", ")} за {item.yearRange}{" "}
+                {item.yearRange.includes("–") ? "годы" : "год"}
+              </div>
+            ))}
           </div>
         </section>
       )}
