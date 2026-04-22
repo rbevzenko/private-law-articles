@@ -203,7 +203,7 @@ const Index = () => {
             {lastImports.map((item) => (
               <div key={item.date} className="py-1.5 first:pt-0 last:pb-0">
                 <span className="font-medium">{item.date}.</span>{" "}
-                Добавлено {item.count}{" "}
+                {(n => n % 100 !== 11 && n % 10 === 1 ? "Добавлена" : "Добавлено")(item.count)} {item.count}{" "}
                 {(n => n % 100 >= 11 && n % 100 <= 19 ? "статей" : n % 10 === 1 ? "статья" : n % 10 >= 2 && n % 10 <= 4 ? "статьи" : "статей")(item.count)} из{" "}
                 {item.journals.join(", ")} за {item.yearRange}{" "}
                 {item.yearRange.includes("–") ? "годы" : "год"}
