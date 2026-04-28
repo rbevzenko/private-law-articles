@@ -355,9 +355,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { journal, mode } = await req.json()
+    const { journal, mode, preview } = await req.json()
     // mode: "all" = scrape all available issues, "new" = only issues not yet in DB
+    // preview: true = return articles without inserting (for admin confirmation)
     const scrapeMode = (mode === 'all' || mode === 'new') ? mode : 'new'
+    const isPreview = preview === true
     const startTime = Date.now()
 
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')
@@ -523,6 +525,22 @@ Deno.serve(async (req) => {
           }
         }
       }
+    }
+
+    // Preview mode: return articles without inserting
+    if (isPreview) {
+      logs.push(`Найдено ${allArticles.length} статей. Ожидается подтверждение.`)
+      return new Response(
+        JSON.stringify({
+          success: true,
+          preview: true,
+          articles: allArticles,
+          total_found: allArticles.length,
+          timed_out: timedOut,
+          logs,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Insert articles — use insert to accurately count new vs existing
