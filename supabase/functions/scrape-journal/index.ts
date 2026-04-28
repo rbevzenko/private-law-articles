@@ -284,31 +284,19 @@ function extractZakonIssueUrls(markdown: string): { url: string, year: number, m
 
 async function getExistingIssueKeys(supabase: any, journalName: string): Promise<Set<string>> {
   const keys = new Set<string>()
-  
-  // Query primary journal name
-  const { data } = await supabase
-    .from('articles')
-    .select('year, issue')
-    .eq('journal', journalName)
-  if (data) {
-    for (const row of data) {
-      keys.add(`${row.year}|${row.issue}`)
+
+  const addKeysForJournal = async (name: string) => {
+    const { data } = await supabase.rpc('get_journal_issue_keys', { journal_name: name })
+    if (data) {
+      for (const row of data) keys.add(`${row.yr}|${row.iss}`)
     }
   }
-  
-  // For ВЭП, also check historical name "Вестник ВАС РФ"
+
+  await addKeysForJournal(journalName)
   if (journalName === 'Вестник экономического правосудия') {
-    const { data: vasData } = await supabase
-      .from('articles')
-      .select('year, issue')
-      .eq('journal', 'Вестник ВАС РФ')
-    if (vasData) {
-      for (const row of vasData) {
-        keys.add(`${row.year}|${row.issue}`)
-      }
-    }
+    await addKeysForJournal('Вестник ВАС РФ')
   }
-  
+
   return keys
 }
 
