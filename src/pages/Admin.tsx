@@ -157,7 +157,15 @@ const Admin = () => {
         body: { journal: journalId, mode },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        let msg = error.message;
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.error) msg = body.error;
+          else if (body?.message) msg = body.message;
+        } catch {}
+        throw new Error(msg);
+      }
 
       if (data.success) {
         setLogs(data.logs || []);

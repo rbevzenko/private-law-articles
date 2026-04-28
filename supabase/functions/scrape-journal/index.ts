@@ -490,8 +490,6 @@ Deno.serve(async (req) => {
           }
         }
       }
-    }
-
     } else if (journal === 'zakonzh') {
       logs.push('Сканирую журнал Закон...')
       const mainPage = await scrapeWithFirecrawl(
