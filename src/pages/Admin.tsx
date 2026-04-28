@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +28,11 @@ const Admin = () => {
 
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+
+  const [visitStats, setVisitStats] = useState<{ today: number; week: number; month: number; year: number } | null>(null);
+  useEffect(() => {
+    supabase.rpc("get_visit_stats").then(({ data }) => { if (data) setVisitStats(data); });
+  }, []);
   const [importResult, setImportResult] = useState<{ inserted: number; skipped: number; errors: number } | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -206,6 +211,30 @@ const Admin = () => {
               Добавить статью
             </Button>
           </div>
+
+          {/* Visit stats */}
+          <Card className="p-5">
+            <h3 className="font-semibold mb-4">Уникальные посетители</h3>
+            {visitStats ? (
+              <div className="grid grid-cols-4 gap-4 text-center">
+                {([
+                  { label: "Сегодня", value: visitStats.today },
+                  { label: "Неделя", value: visitStats.week },
+                  { label: "Месяц", value: visitStats.month },
+                  { label: "Год", value: visitStats.year },
+                ] as const).map(({ label, value }) => (
+                  <div key={label}>
+                    <div className="text-2xl font-bold text-primary">{value.toLocaleString("ru-RU")}</div>
+                    <div className="text-xs text-muted-foreground font-body mt-0.5">{label}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex justify-center py-2">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </Card>
 
           <div className="flex items-center gap-3">
             <label className="text-sm font-body text-muted-foreground">Режим:</label>

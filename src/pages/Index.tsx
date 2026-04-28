@@ -1,8 +1,9 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArticles, useArticleTopics, useLastImports } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
@@ -22,6 +23,16 @@ const Index = () => {
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [catalogSheetOpen, setCatalogSheetOpen] = useState(false);
+
+  useEffect(() => {
+    const KEY = "_vsid";
+    let sid = sessionStorage.getItem(KEY);
+    if (!sid) {
+      sid = crypto.randomUUID();
+      sessionStorage.setItem(KEY, sid);
+      supabase.from("visits").insert({ session_id: sid }).then(() => {});
+    }
+  }, []);
 
   const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
