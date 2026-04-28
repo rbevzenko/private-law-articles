@@ -184,6 +184,48 @@ function parseZakonIssue(markdown: string, year: number, month: string): any[] {
   return articles
 }
 
+function parseZakonZhIssue(markdown: string, year: number, month: string): any[] {
+  const articles: any[] = []
+  const lines = markdown.split('\n')
+  let currentSection = ''
+  const issueNum = monthToNumber(month)
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line.startsWith('#') && !line.startsWith('-') && !line.startsWith('!') && !line.startsWith('[') && !line.includes('zakon.ru') && line.length > 3 && line.length < 60 && /^[А-ЯЁ]/.test(line) && !line.includes('аннотация') && !line.includes('Купить') && !line.includes('Подпис') && !line.includes('Cookie') && !line.includes('Чтобы') && !line.includes('Если вы') && !line.includes('Пожалуйста')) {
+      const potentialSection = line.trim()
+      if (/^[А-ЯЁа-яё\s,]+$/.test(potentialSection) && potentialSection.length < 50) {
+        currentSection = potentialSection; continue
+      }
+    }
+    const articleMatch = line.match(/\[([^\]]+)\]\(https:\/\/zakon\.ru\/publication\/igzakon\/(\d+)\)/)
+    if (articleMatch) {
+      const fullText = articleMatch[1].trim()
+      if (fullText === 'Содержание/Contents' || fullText.length < 10) continue
+      const dotIndex = fullText.indexOf('. ')
+      let authors: string[] = []
+      let title = fullText
+      if (dotIndex > 0 && dotIndex < 60) {
+        const authorPart = fullText.substring(0, dotIndex).trim()
+        const titlePart = fullText.substring(dotIndex + 2).trim()
+        if (/^[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+/.test(authorPart) || /^[А-ЯЁ][а-яё]+\s+[А-ЯЁа-яё]+\s+[А-ЯЁ][а-яё]+/.test(authorPart)) {
+          authors = [authorPart]; title = titlePart
+        }
+      }
+      if (!title || title.length < 5) continue
+      articles.push({
+        title, authors: authors.length > 0 ? authors : ['Автор не указан'],
+        journal: 'Закон', year,
+        issue: issueNum, section: currentSection || null,
+        topics: classifyTopics(title, currentSection),
+        url: `https://zakon.ru/publication/igzakon/${articleMatch[2]}`,
+        source_url: `https://zakon.ru/publication/igzakon/${articleMatch[2]}`,
+      })
+    }
+  }
+  return articles
+}
+
 // ─── Issue URL extractors ──────────────────────────────
 
 function extractMvgpIssueUrls(markdown: string): { url: string, year: number, issue: string }[] {
@@ -217,6 +259,10 @@ function extractPrivlawIssueUrls(markdown: string): { url: string, year: number,
     }
   }
   return results
+}
+
+function extractZakonZhIssueUrls(markdown: string): { url: string, year: number, month: string }[] {
+  return extractZakonIssueUrls(markdown)
 }
 
 function extractZakonIssueUrls(markdown: string): { url: string, year: number, month: string }[] {
@@ -334,11 +380,12 @@ Deno.serve(async (req) => {
       mvgp: 'Вестник гражданского права',
       privlaw: 'Цивилистика',
       zakon: 'Вестник экономического правосудия',
+      zakonzh: 'Закон',
     }
 
     if (!JOURNAL_NAMES[journal]) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid journal. Use: mvgp, privlaw, or zakon' }),
+        JSON.stringify({ success: false, error: 'Invalid journal. Use: mvgp, privlaw, zakon, or zakonzh' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -432,6 +479,41 @@ Deno.serve(async (req) => {
           logs.push(`Сканирую: ${issue.month} ${issue.year}`)
           const issuePage = await scrapeWithFirecrawl(issue.url, firecrawlKey)
           return parseZakonIssue(issuePage, issue.year, issue.month)
+        }))
+        for (let j = 0; j < batchResults.length; j++) {
+          const r = batchResults[j]
+          if (r.status === 'fulfilled') {
+            allArticles.push(...r.value)
+            logs.push(`Найдено ${r.value.length} статей в ${batch[j].month} ${batch[j].year}`)
+          } else {
+            logs.push(`❌ Ошибка ${batch[j].url}: ${r.reason?.message || r.reason}`)
+          }
+        }
+      }
+    }
+
+    } else if (journal === 'zakonzh') {
+      logs.push('Сканирую журнал Закон...')
+      const mainPage = await scrapeWithFirecrawl(
+        'https://zakon.ru/magazine/zakon_zhurnal_dlya_professionalov',
+        firecrawlKey
+      )
+      let issues = extractZakonZhIssueUrls(mainPage)
+      logs.push(`Найдено ${issues.length} номеров на сайте`)
+
+      if (scrapeMode === 'new') {
+        const filteredIssues = issues.filter(i => !existingKeys.has(makeIssueKey(i.year, monthToNumber(i.month))))
+        logs.push(`Новых номеров для сканирования: ${filteredIssues.length}`)
+        issues = filteredIssues
+      }
+
+      for (let i = 0; i < issues.length; i += PARALLEL_LIMIT) {
+        if (isTimeUp(startTime)) { timedOut = true; logs.push('⏱ Лимит времени — продолжите сканирование повторным запуском'); break }
+        const batch = issues.slice(i, i + PARALLEL_LIMIT)
+        const batchResults = await Promise.allSettled(batch.map(async (issue) => {
+          logs.push(`Сканирую: ${issue.month} ${issue.year}`)
+          const issuePage = await scrapeWithFirecrawl(issue.url, firecrawlKey)
+          return parseZakonZhIssue(issuePage, issue.year, issue.month)
         }))
         for (let j = 0; j < batchResults.length; j++) {
           const r = batchResults[j]
