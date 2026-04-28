@@ -22,8 +22,10 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [scraping, setScraping] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [results, setResults] = useState<{ total: number; inserted: number; skipped: number; timedOut?: boolean } | null>(null);
+  const [pendingArticles, setPendingArticles] = useState<any[] | null>(null);
   const [mode, setMode] = useState<ScrapeMode>("new");
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -149,12 +151,13 @@ const Admin = () => {
 
   const handleScrape = async (journalId: string) => {
     setScraping(journalId);
-    setLogs([`Режим: ${mode === "new" ? "только новые номера" : "все номера"}. Начинаю...`]);
+    setPendingArticles(null);
     setResults(null);
+    setLogs([`Режим: ${mode === "new" ? "только новые номера" : "все номера"}. Сканирую...`]);
 
     try {
       const { data, error } = await supabase.functions.invoke("scrape-journal", {
-        body: { journal: journalId, mode },
+        body: { journal: journalId, mode, preview: true },
       });
 
       if (error) {
@@ -167,20 +170,9 @@ const Admin = () => {
         throw new Error(msg);
       }
 
-      if (data.success) {
+      if (data.success && data.preview) {
         setLogs(data.logs || []);
-        setResults({
-          total: data.total_found,
-          inserted: data.inserted,
-          skipped: data.skipped,
-          timedOut: data.timed_out,
-        });
-        toast({
-          title: data.timed_out ? "Частично завершено" : "Сканирование завершено",
-          description: data.timed_out
-            ? `Добавлено ${data.inserted} статей. Запустите ещё раз для оставшихся номеров.`
-            : `Найдено ${data.total_found} статей, добавлено ${data.inserted}`,
-        });
+        setPendingArticles(data.articles || []);
       } else {
         throw new Error(data.error || "Unknown error");
       }
@@ -189,6 +181,34 @@ const Admin = () => {
       toast({ title: "Ошибка сканирования", description: err.message, variant: "destructive" });
     } finally {
       setScraping(null);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!pendingArticles?.length) return;
+    setConfirming(true);
+    const BATCH = 50;
+    let inserted = 0, skipped = 0, errors = 0;
+    try {
+      for (let i = 0; i < pendingArticles.length; i += BATCH) {
+        const batch = pendingArticles.slice(i, i + BATCH);
+        const { data, error } = await supabase
+          .from("articles")
+          .upsert(batch, { onConflict: "title,journal,year,issue", ignoreDuplicates: true })
+          .select("id");
+        if (error) { errors += batch.length; }
+        else {
+          inserted += data?.length ?? 0;
+          skipped += batch.length - (data?.length ?? 0);
+        }
+      }
+      setResults({ total: pendingArticles.length, inserted, skipped });
+      setPendingArticles(null);
+      toast({ title: "Импорт завершён", description: `Добавлено: ${inserted}, пропущено дублей: ${skipped}` });
+    } catch (err: any) {
+      toast({ title: "Ошибка импорта", description: err.message, variant: "destructive" });
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -303,6 +323,45 @@ const Admin = () => {
               </Card>
             ))}
           </div>
+
+          {pendingArticles && (
+            <Card className="p-5 border-blue-200 bg-blue-50/50">
+              <h3 className="font-semibold text-blue-800 mb-1">
+                Найдено {pendingArticles.length} статей — подтвердите добавление
+              </h3>
+              <p className="text-xs text-blue-600 font-body mb-3">
+                Проверьте список и нажмите «Добавить в базу» для импорта.
+              </p>
+              <div className="max-h-72 overflow-y-auto rounded border border-blue-200 bg-white mb-4">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-blue-50 border-b border-blue-200">
+                    <tr>
+                      <th className="text-left px-3 py-2 font-medium text-blue-800 font-body">Название</th>
+                      <th className="text-left px-3 py-2 font-medium text-blue-800 font-body w-16">Год</th>
+                      <th className="text-left px-3 py-2 font-medium text-blue-800 font-body w-20">Выпуск</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingArticles.map((a, i) => (
+                      <tr key={i} className="border-b border-blue-100 last:border-0">
+                        <td className="px-3 py-1.5 font-body text-foreground leading-snug">{a.title}</td>
+                        <td className="px-3 py-1.5 font-body text-muted-foreground">{a.year}</td>
+                        <td className="px-3 py-1.5 font-body text-muted-foreground">{a.issue || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex gap-3">
+                <Button onClick={handleConfirmImport} disabled={confirming}>
+                  {confirming ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Добавляю...</> : `Добавить в базу (${pendingArticles.length})`}
+                </Button>
+                <Button variant="outline" onClick={() => setPendingArticles(null)} disabled={confirming}>
+                  Отменить
+                </Button>
+              </div>
+            </Card>
+          )}
 
           {results && (
             <Card className={`p-5 ${results.timedOut ? "border-amber-200 bg-amber-50/50" : "border-green-200 bg-green-50/50"}`}>
