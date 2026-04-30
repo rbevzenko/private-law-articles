@@ -32,6 +32,51 @@ const Admin = () => {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
 
+  const [undoPreview, setUndoPreview] = useState<{ date: string; count: number; journals: string } | null>(null);
+  const [undoing, setUndoing] = useState(false);
+
+  const handleUndoPreview = async () => {
+    const { data: last } = await supabase
+      .from("articles")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (!last) return;
+    const maxDay = last.created_at.slice(0, 10);
+    const { data: rows } = await supabase
+      .from("articles")
+      .select("journal")
+      .gte("created_at", `${maxDay}T00:00:00.000Z`)
+      .lte("created_at", `${maxDay}T23:59:59.999Z`);
+    if (!rows) return;
+    const journals = [...new Set(rows.map((r: any) => r.journal))].join(", ");
+    const [y, m, d] = maxDay.split("-");
+    setUndoPreview({ date: `${d}.${m}.${y}`, count: rows.length, journals });
+  };
+
+  const handleUndoConfirm = async () => {
+    if (!undoPreview) return;
+    setUndoing(true);
+    const { data: last } = await supabase
+      .from("articles")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (last) {
+      const maxDay = last.created_at.slice(0, 10);
+      await supabase
+        .from("articles")
+        .delete()
+        .gte("created_at", `${maxDay}T00:00:00.000Z`)
+        .lte("created_at", `${maxDay}T23:59:59.999Z`);
+    }
+    toast({ title: "Удалено", description: `Удалено ${undoPreview.count} статей за ${undoPreview.date}` });
+    setUndoPreview(null);
+    setUndoing(false);
+  };
+
   const [visitStats, setVisitStats] = useState<{ today: number; week: number; month: number; year: number } | null>(null);
   useEffect(() => {
     supabase.rpc("get_visit_stats").then(({ data }) => { if (data) setVisitStats(data); });
@@ -464,6 +509,35 @@ const Admin = () => {
                 <><Download className="h-4 w-4 mr-2" />Скачать JSON</>
               )}
             </Button>
+          </Card>
+
+          {/* Undo last import */}
+          <Card className="p-5">
+            <h3 className="font-semibold mb-1">Отменить последнее добавление</h3>
+            <p className="text-sm text-muted-foreground font-body mb-4">
+              Удаляет все статьи, добавленные в последний день пополнения базы.
+            </p>
+            {!undoPreview ? (
+              <Button variant="outline" onClick={handleUndoPreview} className="border-red-200 text-red-700 hover:bg-red-50">
+                Показать что будет удалено
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-body text-red-800">
+                  <span className="font-medium">{undoPreview.date}.</span> Будет удалено{" "}
+                  <span className="font-medium">{undoPreview.count}</span> статей из{" "}
+                  {undoPreview.journals}
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="destructive" onClick={handleUndoConfirm} disabled={undoing}>
+                    {undoing ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Удаляю...</> : "Удалить"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setUndoPreview(null)} disabled={undoing}>
+                    Отменить
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
