@@ -253,7 +253,7 @@ const Index = () => {
       </section>
 
       {/* Results */}
-      <section className="container mx-auto px-4 sm:px-8 pb-16">
+      <section className="container mx-auto px-4 sm:px-8 pb-16 min-h-[70vh]">
         {isLoading && isUsingFallback ? (
           <div className="grid gap-3 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, i) => (
