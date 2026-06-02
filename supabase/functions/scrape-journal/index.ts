@@ -184,6 +184,48 @@ function parseZakonIssue(markdown: string, year: number, month: string): any[] {
   return articles
 }
 
+function parseZakonZhIssue(markdown: string, year: number, month: string): any[] {
+  const articles: any[] = []
+  const lines = markdown.split('\n')
+  let currentSection = ''
+  const issueNum = monthToNumber(month)
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line.startsWith('#') && !line.startsWith('-') && !line.startsWith('!') && !line.startsWith('[') && !line.includes('zakon.ru') && line.length > 3 && line.length < 60 && /^[А-ЯЁ]/.test(line) && !line.includes('аннотация') && !line.includes('Купить') && !line.includes('Подпис') && !line.includes('Cookie') && !line.includes('Чтобы') && !line.includes('Если вы') && !line.includes('Пожалуйста')) {
+      const potentialSection = line.trim()
+      if (/^[А-ЯЁа-яё\s,]+$/.test(potentialSection) && potentialSection.length < 50) {
+        currentSection = potentialSection; continue
+      }
+    }
+    const articleMatch = line.match(/\[([^\]]+)\]\(https:\/\/zakon\.ru\/publication\/igzakon\/(\d+)\)/)
+    if (articleMatch) {
+      const fullText = articleMatch[1].trim()
+      if (fullText === 'Содержание/Contents' || fullText.length < 10) continue
+      const dotIndex = fullText.indexOf('. ')
+      let authors: string[] = []
+      let title = fullText
+      if (dotIndex > 0 && dotIndex < 60) {
+        const authorPart = fullText.substring(0, dotIndex).trim()
+        const titlePart = fullText.substring(dotIndex + 2).trim()
+        if (/^[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+/.test(authorPart) || /^[А-ЯЁ][а-яё]+\s+[А-ЯЁа-яё]+\s+[А-ЯЁ][а-яё]+/.test(authorPart)) {
+          authors = [authorPart]; title = titlePart
+        }
+      }
+      if (!title || title.length < 5) continue
+      articles.push({
+        title, authors: authors.length > 0 ? authors : ['Автор не указан'],
+        journal: 'Закон', year,
+        issue: issueNum, section: currentSection || null,
+        topics: classifyTopics(title, currentSection),
+        url: `https://zakon.ru/publication/igzakon/${articleMatch[2]}`,
+        source_url: `https://zakon.ru/publication/igzakon/${articleMatch[2]}`,
+      })
+    }
+  }
+  return articles
+}
+
 // ─── Issue URL extractors ──────────────────────────────
 
 function extractMvgpIssueUrls(markdown: string): { url: string, year: number, issue: string }[] {
@@ -219,6 +261,10 @@ function extractPrivlawIssueUrls(markdown: string): { url: string, year: number,
   return results
 }
 
+function extractZakonZhIssueUrls(markdown: string): { url: string, year: number, month: string }[] {
+  return extractZakonIssueUrls(markdown)
+}
+
 function extractZakonIssueUrls(markdown: string): { url: string, year: number, month: string }[] {
   const results: { url: string, year: number, month: string }[] = []
   const lines = markdown.split('\n')
@@ -238,31 +284,19 @@ function extractZakonIssueUrls(markdown: string): { url: string, year: number, m
 
 async function getExistingIssueKeys(supabase: any, journalName: string): Promise<Set<string>> {
   const keys = new Set<string>()
-  
-  // Query primary journal name
-  const { data } = await supabase
-    .from('articles')
-    .select('year, issue')
-    .eq('journal', journalName)
-  if (data) {
-    for (const row of data) {
-      keys.add(`${row.year}|${row.issue}`)
+
+  const addKeysForJournal = async (name: string) => {
+    const { data } = await supabase.rpc('get_journal_issue_keys', { journal_name: name })
+    if (data) {
+      for (const row of data) keys.add(`${row.yr}|${row.iss}`)
     }
   }
-  
-  // For ВЭП, also check historical name "Вестник ВАС РФ"
+
+  await addKeysForJournal(journalName)
   if (journalName === 'Вестник экономического правосудия') {
-    const { data: vasData } = await supabase
-      .from('articles')
-      .select('year, issue')
-      .eq('journal', 'Вестник ВАС РФ')
-    if (vasData) {
-      for (const row of vasData) {
-        keys.add(`${row.year}|${row.issue}`)
-      }
-    }
+    await addKeysForJournal('Вестник ВАС РФ')
   }
-  
+
   return keys
 }
 
@@ -309,9 +343,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { journal, mode } = await req.json()
+    const { journal, mode, preview } = await req.json()
     // mode: "all" = scrape all available issues, "new" = only issues not yet in DB
+    // preview: true = return articles without inserting (for admin confirmation)
     const scrapeMode = (mode === 'all' || mode === 'new') ? mode : 'new'
+    const isPreview = preview === true
     const startTime = Date.now()
 
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')
@@ -334,11 +370,12 @@ Deno.serve(async (req) => {
       mvgp: 'Вестник гражданского права',
       privlaw: 'Цивилистика',
       zakon: 'Вестник экономического правосудия',
+      zakonzh: 'Закон',
     }
 
     if (!JOURNAL_NAMES[journal]) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid journal. Use: mvgp, privlaw, or zakon' }),
+        JSON.stringify({ success: false, error: 'Invalid journal. Use: mvgp, privlaw, zakon, or zakonzh' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -443,6 +480,55 @@ Deno.serve(async (req) => {
           }
         }
       }
+    } else if (journal === 'zakonzh') {
+      logs.push('Сканирую журнал Закон...')
+      const mainPage = await scrapeWithFirecrawl(
+        'https://zakon.ru/magazine/zakon_zhurnal_dlya_professionalov',
+        firecrawlKey
+      )
+      let issues = extractZakonZhIssueUrls(mainPage)
+      logs.push(`Найдено ${issues.length} номеров на сайте`)
+
+      if (scrapeMode === 'new') {
+        const filteredIssues = issues.filter(i => !existingKeys.has(makeIssueKey(i.year, monthToNumber(i.month))))
+        logs.push(`Новых номеров для сканирования: ${filteredIssues.length}`)
+        issues = filteredIssues
+      }
+
+      for (let i = 0; i < issues.length; i += PARALLEL_LIMIT) {
+        if (isTimeUp(startTime)) { timedOut = true; logs.push('⏱ Лимит времени — продолжите сканирование повторным запуском'); break }
+        const batch = issues.slice(i, i + PARALLEL_LIMIT)
+        const batchResults = await Promise.allSettled(batch.map(async (issue) => {
+          logs.push(`Сканирую: ${issue.month} ${issue.year}`)
+          const issuePage = await scrapeWithFirecrawl(issue.url, firecrawlKey)
+          return parseZakonZhIssue(issuePage, issue.year, issue.month)
+        }))
+        for (let j = 0; j < batchResults.length; j++) {
+          const r = batchResults[j]
+          if (r.status === 'fulfilled') {
+            allArticles.push(...r.value)
+            logs.push(`Найдено ${r.value.length} статей в ${batch[j].month} ${batch[j].year}`)
+          } else {
+            logs.push(`❌ Ошибка ${batch[j].url}: ${r.reason?.message || r.reason}`)
+          }
+        }
+      }
+    }
+
+    // Preview mode: return articles without inserting
+    if (isPreview) {
+      logs.push(`Найдено ${allArticles.length} статей. Ожидается подтверждение.`)
+      return new Response(
+        JSON.stringify({
+          success: true,
+          preview: true,
+          articles: allArticles,
+          total_found: allArticles.length,
+          timed_out: timedOut,
+          logs,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Insert articles — use insert to accurately count new vs existing
@@ -452,7 +538,7 @@ Deno.serve(async (req) => {
     for (const article of allArticles) {
       const { data: insertedData, error } = await supabase
         .from('articles')
-        .upsert(article, { onConflict: 'title,journal,year', ignoreDuplicates: true })
+        .upsert(article, { onConflict: 'title,journal,year,issue', ignoreDuplicates: true })
         .select('id')
       if (error) {
         logs.push(`Ошибка вставки "${article.title}": ${error.message}`)

@@ -11,7 +11,21 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const Stub = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <p className="font-serif text-xl md:text-2xl text-foreground text-center">
+      Каталог находится по ссылке{" "}
+      <a
+        href="https://roman-bevzenko.com"
+        className="text-primary underline underline-offset-4 hover:opacity-80"
+      >
+        https://roman-bevzenko.com
+      </a>
+    </p>
+  </div>
+);
+
+const Catalog = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -31,4 +45,9 @@ const App = () => (
   </ErrorBoundary>
 );
 
+const App = window.location.hostname === "private-law-articles.lovable.app"
+  ? Stub
+  : Catalog;
+
 export default App;
+

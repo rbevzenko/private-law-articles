@@ -11,9 +11,13 @@ const SearchBar = ({ value, onChange }: SearchBarProps) => {
       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          const y = window.scrollY;
+          onChange(e.target.value);
+          requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior }));
+        }}
         placeholder="Поиск по названию, автору, изданию…"
-        className="w-full h-10 pl-9 pr-8 rounded border border-border bg-card font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+        className="w-full h-10 pl-9 pr-8 rounded border border-border bg-card font-body text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
       />
       {value && (
         <button

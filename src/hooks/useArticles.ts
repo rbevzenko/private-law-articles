@@ -96,3 +96,43 @@ export function useArticleJournals() {
     },
   });
 }
+
+export interface LastImportInfo {
+  date: string;
+  count: number;
+  journals: string[];
+  yearRange: string;
+}
+
+export function useLastImports() {
+  return useQuery({
+    queryKey: ["articles"],
+    queryFn: fetchAllArticles,
+    staleTime: STALE_TIME,
+    retry: 0,
+    select: (articles: DbArticle[]): LastImportInfo[] => {
+      if (!articles.length) return [];
+      const toLocalDay = (ts: string) => {
+        const d = new Date(ts);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      };
+      const byDay = new Map<string, DbArticle[]>();
+      for (const a of articles) {
+        const day = toLocalDay(a.created_at);
+        if (!byDay.has(day)) byDay.set(day, []);
+        byDay.get(day)!.push(a);
+      }
+      const sortedDays = Array.from(byDay.keys()).sort((a, b) => b.localeCompare(a)).slice(0, 3);
+      return sortedDays.map((day) => {
+        const group = byDay.get(day)!;
+        const [y, m, d] = day.split("-");
+        const journalSet = new Set(group.map((a) => a.journal));
+        const years = group.map((a) => a.year);
+        const minYear = Math.min(...years);
+        const maxYear = Math.max(...years);
+        const yearRange = minYear === maxYear ? `${minYear}` : `${minYear}–${maxYear}`;
+        return { date: `${d}.${m}.${y}`, count: group.length, journals: Array.from(journalSet), yearRange };
+      });
+    },
+  });
+}

@@ -16,6 +16,7 @@ interface FilterPanelProps {
   authors?: string[];
   selectedAuthors?: string[];
   onAuthorsChange?: (authors: string[]) => void;
+  onClearSearch?: () => void;
 }
 
 const FilterPanel = ({
@@ -34,13 +35,8 @@ const FilterPanel = ({
   authors,
   selectedAuthors = [],
   onAuthorsChange,
+  onClearSearch,
 }: FilterPanelProps) => {
-  const hasFilters =
-    selectedTopics.length > 0 ||
-    selectedYears.length > 0 ||
-    selectedJournals.length > 0 ||
-    selectedIssues.length > 0 ||
-    selectedAuthors.length > 0;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -96,20 +92,19 @@ const FilterPanel = ({
         />
       )}
 
-      {hasFilters && (
-        <button
-          onClick={() => {
-            onTopicsChange([]);
-            onYearsChange([]);
-            onJournalsChange?.([]);
-            onAuthorsChange?.([]);
-            onIssuesChange?.([]);
-          }}
-          className="font-body text-sm text-accent hover:text-accent/80 transition-colors active:scale-95"
-        >
-          Сбросить
-        </button>
-      )}
+      <button
+        onClick={() => {
+          onTopicsChange([]);
+          onYearsChange([]);
+          onJournalsChange?.([]);
+          onAuthorsChange?.([]);
+          onIssuesChange?.([]);
+          onClearSearch?.();
+        }}
+        className="font-body text-sm text-muted-foreground hover:text-foreground border border-border rounded-md px-3 py-1.5 transition-colors active:scale-95"
+      >
+        Очистить
+      </button>
     </div>
   );
 };
