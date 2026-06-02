@@ -328,7 +328,6 @@ const Admin = () => {
             )}
           </Card>
 
-<<<<<<< HEAD
           {/* Country stats */}
           <Card className="p-5">
             <h3 className="font-semibold mb-4">География посетителей</h3>
@@ -374,8 +373,6 @@ const Admin = () => {
             )}
           </Card>
 
-=======
->>>>>>> origin/main
           <div className="flex items-center gap-3">
             <label className="text-sm font-body text-muted-foreground">Режим:</label>
             <div className="flex rounded-md border border-border overflow-hidden">
@@ -508,10 +505,7 @@ const Admin = () => {
               </div>
             </Card>
           )}
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
           {/* JSON Import */}
           <Card className="p-5">
             <h3 className="font-semibold mb-1">Импорт из JSON</h3>
