@@ -18,6 +18,18 @@ const JOURNALS = [
 
 type ScrapeMode = "new" | "all";
 
+const toFlag = (code: string) =>
+  [...code.toUpperCase()].map((c) => String.fromCodePoint(c.charCodeAt(0) + 127397)).join("");
+
+const getCountryName = (code: string) => {
+  if (code === "??") return "Неизвестно";
+  try {
+    return new Intl.DisplayNames(["ru"], { type: "region" }).of(code) || code;
+  } catch {
+    return code;
+  }
+};
+
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -78,8 +90,11 @@ const Admin = () => {
   };
 
   const [visitStats, setVisitStats] = useState<{ today: number; week: number; month: number; year: number } | null>(null);
+  const [countryStats, setCountryStats] = useState<{ country: string; cnt: number }[] | null>(null);
+
   useEffect(() => {
     supabase.rpc("get_visit_stats").then(({ data }) => { if (data) setVisitStats(data); });
+    supabase.rpc("get_country_stats").then(({ data }) => { if (data) setCountryStats(data); });
   }, []);
   const [importResult, setImportResult] = useState<{ inserted: number; skipped: number; errors: number } | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
@@ -310,6 +325,52 @@ const Admin = () => {
             )}
           </Card>
 
+<<<<<<< HEAD
+          {/* Country stats */}
+          <Card className="p-5">
+            <h3 className="font-semibold mb-4">География посетителей</h3>
+            {countryStats ? (
+              countryStats.length === 0 ? (
+                <p className="text-sm text-muted-foreground font-body">Данных пока нет</p>
+              ) : (
+                <div className="space-y-2">
+                  {countryStats.map(({ country, cnt }) => {
+                    const max = countryStats[0].cnt;
+                    return (
+                      <div key={country} className="flex items-center gap-3">
+                        <span className="text-xl w-7 shrink-0 text-center">
+                          {country === "??" ? "🌍" : toFlag(country)}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-body text-sm text-foreground truncate">
+                              {getCountryName(country)}
+                            </span>
+                            <span className="font-body text-sm font-medium text-primary ml-2 shrink-0">
+                              {cnt}
+                            </span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-primary/60 transition-all"
+                              style={{ width: `${Math.round((cnt / max) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              <div className="flex justify-center py-2">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </Card>
+
+=======
+>>>>>>> origin/main
           <div className="flex items-center gap-3">
             <label className="text-sm font-body text-muted-foreground">Режим:</label>
             <div className="flex rounded-md border border-border overflow-hidden">
@@ -442,6 +503,10 @@ const Admin = () => {
               </div>
             </Card>
           )}
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
           {/* JSON Import */}
           <Card className="p-5">
             <h3 className="font-semibold mb-1">Импорт из JSON</h3>
