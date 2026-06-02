@@ -90,11 +90,14 @@ const Admin = () => {
   };
 
   const [visitStats, setVisitStats] = useState<{ today: number; week: number; month: number; year: number } | null>(null);
-  const [countryStats, setCountryStats] = useState<{ country: string; cnt: number }[] | null>(null);
+  const [countryStats, setCountryStats] = useState<{ country: string; cnt: number }[] | "error" | null>(null);
 
   useEffect(() => {
     supabase.rpc("get_visit_stats").then(({ data }) => { if (data) setVisitStats(data); });
-    supabase.rpc("get_country_stats").then(({ data }) => { if (data) setCountryStats(data); });
+    supabase.rpc("get_country_stats").then(({ data, error }) => {
+      if (error) setCountryStats("error");
+      else setCountryStats(data ?? []);
+    });
   }, []);
   const [importResult, setImportResult] = useState<{ inserted: number; skipped: number; errors: number } | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
@@ -330,7 +333,9 @@ const Admin = () => {
           <Card className="p-5">
             <h3 className="font-semibold mb-4">География посетителей</h3>
             {countryStats ? (
-              countryStats.length === 0 ? (
+              countryStats === "error" ? (
+                <p className="text-sm text-red-500 font-body">Функция get_country_stats не найдена — выполните SQL-миграцию в Supabase</p>
+              ) : countryStats.length === 0 ? (
                 <p className="text-sm text-muted-foreground font-body">Данных пока нет</p>
               ) : (
                 <div className="space-y-2">
