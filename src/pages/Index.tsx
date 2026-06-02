@@ -1,8 +1,9 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { BookOpen, Settings, ChevronLeft, ChevronRight, LogIn, LogOut, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useArticles, useArticleTopics } from "@/hooks/useArticles";
+import { useArticles, useArticleTopics, useLastImports } from "@/hooks/useArticles";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { articles as staticArticles, TOPICS } from "@/data/articles";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
@@ -23,8 +24,27 @@ const Index = () => {
   const [page, setPage] = useState(1);
   const [catalogSheetOpen, setCatalogSheetOpen] = useState(false);
 
+  useEffect(() => {
+    const KEY = "_vsid";
+    let sid = sessionStorage.getItem(KEY);
+    if (!sid) {
+      sid = crypto.randomUUID();
+      sessionStorage.setItem(KEY, sid);
+      const sidCopy = sid;
+      fetch("https://ipapi.co/json/")
+        .then((r) => r.json())
+        .then((geo) => {
+          supabase.from("visits").insert({ session_id: sidCopy, country: geo.country_code || null }).then(() => {});
+        })
+        .catch(() => {
+          supabase.from("visits").insert({ session_id: sidCopy }).then(() => {});
+        });
+    }
+  }, []);
+
   const { data: dbArticles, isLoading, isError } = useArticles();
   const { data: dbTopics } = useArticleTopics();
+  const { data: lastImports } = useLastImports();
   const { user, signOut } = useAuth();
 
   const allArticles: Article[] = useMemo(() => {
@@ -137,6 +157,22 @@ const Index = () => {
             — библиография
           </span>
           <div className="ml-auto flex items-center gap-2">
+            <a
+              href="https://boosty.to/rbevzenko"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-body text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Лекции, книги и статьи Романа Бевзенко
+            </a>
+            <a
+              href="https://boosty.to/rbevzenko"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sm:hidden inline-flex items-center px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground font-body text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              Boosty
+            </a>
             {user ? (
               <>
                 <Link
@@ -179,6 +215,23 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Last imports news */}
+      {!isUsingFallback && lastImports && lastImports.length > 0 && (
+        <section className="container mx-auto px-4 sm:px-8 pb-4">
+          <div className="rounded-md border border-border bg-card/60 px-4 py-3 font-body text-sm text-foreground divide-y divide-border">
+            {lastImports.map((item) => (
+              <div key={item.date} className="py-1.5 first:pt-0 last:pb-0">
+                <span className="font-medium">{item.date}.</span>{" "}
+                {(n => n % 100 !== 11 && n % 10 === 1 ? "Добавлена" : "Добавлено")(item.count)} {item.count}{" "}
+                {(n => n % 100 >= 11 && n % 100 <= 19 ? "статей" : n % 10 === 1 ? "статья" : n % 10 >= 2 && n % 10 <= 4 ? "статьи" : "статей")(item.count)} из{" "}
+                {item.journals.join(", ")} за {item.yearRange}{" "}
+                {item.yearRange.includes("–") ? "годы" : "год"}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Search & Filters */}
       <section className="container mx-auto px-4 sm:px-8 pb-5">
         <div
@@ -202,12 +255,13 @@ const Index = () => {
             authors={authors}
             selectedAuthors={selectedAuthors}
             onAuthorsChange={handleAuthorsChange}
+            onClearSearch={() => { setSearch(""); setPage(1); }}
           />
         </div>
       </section>
 
       {/* Results */}
-      <section className="container mx-auto px-4 sm:px-8 pb-16">
+      <section className="container mx-auto px-4 sm:px-8 pb-16 min-h-[70vh]">
         {isLoading && isUsingFallback ? (
           <div className="grid gap-3 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, i) => (
