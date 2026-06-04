@@ -30,15 +30,7 @@ const Index = () => {
     if (!sid) {
       sid = crypto.randomUUID();
       sessionStorage.setItem(KEY, sid);
-      const sidCopy = sid;
-      fetch("https://ipapi.co/json/")
-        .then((r) => r.json())
-        .then((geo) => {
-          supabase.from("visits").insert({ session_id: sidCopy, country: geo.country_code || null }).then(() => {});
-        })
-        .catch(() => {
-          supabase.from("visits").insert({ session_id: sidCopy }).then(() => {});
-        });
+      supabase.functions.invoke("record-visit", { body: { session_id: sid } });
     }
   }, []);
 
