@@ -8,13 +8,32 @@ const cors = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-
   try {
     const { session_id } = await req.json();
     if (!session_id) throw new Error("session_id required");
 
-    // Cloudflare injects cf-ipcountry into every request to Supabase Edge Functions
-    const country = req.headers.get("cf-ipcountry") || null;
+    // Try Cloudflare header first (works if Supabase uses CF infrastructure)
+    let country: string | null = req.headers.get("cf-ipcountry") || null;
+
+    // Fallback: resolve country from client IP via server-side API call
+    if (!country) {
+      const ip =
+        req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+        req.headers.get("x-real-ip") ||
+        null;
+
+      if (ip && ip !== "::1" && !ip.startsWith("127.")) {
+        try {
+          const r = await fetch(`https://ipapi.co/${ip}/country/`, {
+            headers: { "User-Agent": "supabase-edge-function" },
+          });
+          if (r.ok) {
+            const text = (await r.text()).trim();
+            if (text.length === 2) country = text;
+          }
+        } catch { /* ignore geo lookup failure */ }
+      }
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -23,7 +42,7 @@ serve(async (req) => {
 
     await supabase.from("visits").insert({ session_id, country });
 
-    return new Response(JSON.stringify({ ok: true }), {
+    return new Response(JSON.stringify({ ok: true, country }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (err: any) {
