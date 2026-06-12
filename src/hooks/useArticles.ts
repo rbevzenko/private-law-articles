@@ -102,6 +102,7 @@ export interface LastImportInfo {
   count: number;
   journals: string[];
   yearRange: string;
+  journalIssues: Record<string, string[]>;
 }
 
 export function useLastImports() {
@@ -131,7 +132,16 @@ export function useLastImports() {
         const minYear = Math.min(...years);
         const maxYear = Math.max(...years);
         const yearRange = minYear === maxYear ? `${minYear}` : `${minYear}–${maxYear}`;
-        return { date: `${d}.${m}.${y}`, count: group.length, journals: Array.from(journalSet), yearRange };
+        const journalIssues: Record<string, string[]> = {};
+        for (const journal of journalSet) {
+          const raw = group.filter((a) => a.journal === journal && a.issue).map((a) => a.issue!);
+          const unique = [...new Set(raw)].sort((a, b) => {
+            const na = parseInt(a), nb = parseInt(b);
+            return !isNaN(na) && !isNaN(nb) ? na - nb : a.localeCompare(b);
+          });
+          if (unique.length > 0) journalIssues[journal] = unique;
+        }
+        return { date: `${d}.${m}.${y}`, count: group.length, journals: Array.from(journalSet), yearRange, journalIssues };
       });
     },
   });

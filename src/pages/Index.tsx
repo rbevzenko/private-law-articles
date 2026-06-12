@@ -216,7 +216,10 @@ const Index = () => {
                 <span className="font-medium">{item.date}.</span>{" "}
                 {(n => n % 100 !== 11 && n % 10 === 1 ? "Добавлена" : "Добавлено")(item.count)} {item.count}{" "}
                 {(n => n % 100 >= 11 && n % 100 <= 19 ? "статей" : n % 10 === 1 ? "статья" : n % 10 >= 2 && n % 10 <= 4 ? "статьи" : "статей")(item.count)} из{" "}
-                {item.journals.join(", ")} за {item.yearRange}{" "}
+                {item.journals.map((j) => {
+                  const iss = item.journalIssues?.[j];
+                  return iss && iss.length > 0 ? `${j} №${iss.join(", ")}` : j;
+                }).join(", ")} за {item.yearRange}{" "}
                 {item.yearRange.includes("–") ? "годы" : "год"}
               </div>
             ))}
