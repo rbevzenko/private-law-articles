@@ -301,7 +301,7 @@ const Admin = () => {
             </div>
             <Button onClick={() => setCreateOpen(true)} className="shrink-0">
               <Plus className="h-4 w-4 mr-1.5" />
-              Добавить статью
+              Добавить статью 
             </Button>
           </div>
 
