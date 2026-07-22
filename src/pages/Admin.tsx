@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Loader2, Database, ArrowLeft, RefreshCw, FolderDown, Plus, Upload, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import CreateArticleDialog from "@/components/CreateArticleDialog";
+import ManageArticlesSection from "@/components/ManageArticlesSection";
 import { useToast } from "@/hooks/use-toast";
 
 const JOURNALS = [
@@ -304,6 +305,8 @@ const Admin = () => {
             </Button>
           </div>
 
+          <ManageArticlesSection />
+          
           {/* Visit stats */}
           <Card className="p-5">
             <h3 className="font-semibold mb-4">Уникальные посетители</h3>
