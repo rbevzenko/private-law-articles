@@ -10,8 +10,8 @@ import EditArticleDialog from "@/components/EditArticleDialog";
 
 const RESULTS_LIMIT = 100;
 
-const normalize = (s: string) =>
-  s.toLowerCase().replace(/[«»"'.,;:!?()\-–—]/g, "").replace(/\s+/g, " ").trim();
+const normalize = (s: string | null | undefined) =>
+  (s || "").toLowerCase().replace(/[«»"'.,;:!?()\-–—]/g, "").replace(/\s+/g, " ").trim();
 
 const ManageArticlesSection = () => {
   const { data: articles, isLoading } = useArticles();
@@ -21,7 +21,6 @@ const ManageArticlesSection = () => {
   const [editing, setEditing] = useState<DbArticle | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Группируем статьи по названию+изданию+году, чтобы найти точные дубли прямо на клиенте
   const duplicateIds = useMemo(() => {
     if (!articles) return new Set<string>();
     const groups = new Map<string, DbArticle[]>();
@@ -45,9 +44,9 @@ const ManageArticlesSection = () => {
     if (q) {
       list = list.filter(
         (a) =>
-          a.title.toLowerCase().includes(q) ||
-          a.authors.some((au) => au.toLowerCase().includes(q)) ||
-          a.journal.toLowerCase().includes(q)
+          (a.title || "").toLowerCase().includes(q) ||
+          (a.authors || []).some((au) => (au || "").toLowerCase().includes(q)) ||
+          (a.journal || "").toLowerCase().includes(q)
       );
     }
     return list;
@@ -100,7 +99,7 @@ const ManageArticlesSection = () => {
                 <div className="min-w-0">
                   <p className="font-body text-sm text-foreground leading-snug">{a.title}</p>
                   <p className="text-xs text-muted-foreground font-body mt-0.5">
-                    {a.authors.join(", ") || "Автор не указан"} · {a.journal} · {a.year}
+                    {(a.authors || []).join(", ") || "Автор не указан"} · {a.journal || "Издание не указано"} · {a.year}
                     {a.issue ? `, №${a.issue}` : ""}
                   </p>
                   <div className="flex flex-wrap gap-1 mt-1.5">
